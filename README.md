@@ -24,7 +24,7 @@ Riti Sharma, Renae Tamura, Jack Bernstein, Adam White
 
 <ul>
   <li> A thread that handles communication with a particular user. If it recieves the "logoff" message from the user, the program removes this user from the list of online users and closes all connections. </li>
-<ul>
+</ul>
 
 
 ## How to Run
