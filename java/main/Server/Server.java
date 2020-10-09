@@ -7,14 +7,14 @@ public class Server {
     public Server(String listenPortStr) throws Exception {
 
         //notify the identity of the server to the user
-        System.out.println("This is Bob");
+        System.out.println("This is the Server");
         
         //attempt to create a server with the given port number
         int listenPort = Integer.parseInt(listenPortStr);
         try {
             System.out.println("Connecting to port "+listenPort+"...");
             ServerSocket bobServer = new ServerSocket(listenPort);
-            System.out.println("Bob Server started at port "+listenPort);
+            System.out.println("Server started at port "+listenPort);
             
             //accept the client(a.k.a. Alice)
             Socket clientSocket = bobServer.accept();
@@ -40,7 +40,7 @@ public class Server {
             //clean up the connections before closing
             bobServer.close();
             streamIn.close();
-            System.out.println("Bob closed");
+            System.out.println("Server closed");
         } 
         catch (IOException e) {
             //print error if the server fails to create itself
