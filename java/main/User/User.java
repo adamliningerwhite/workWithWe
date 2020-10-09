@@ -4,35 +4,52 @@ import java.util.*;
 
 public class User {
     
-    public User(String serverPortStr) throws Exception {
+    private static final int USER_SERVER_PORT = 4232;
+    private static final int MESSAGE_SERVER_PORT = 4771;
+    private static final String SERVER_ADDRESS = "localhost";
+
+    private String username;
+
+    public User(String username) throws Exception {
+
+        this.username = username;
 
         Scanner console = new Scanner(System.in);
-        System.out.println("This is a user"); 
-            
-        //obtain server's port number and connect to it
-        int serverPort = Integer.parseInt(serverPortStr);
-        String serverAddress = "localhost";
             
         try{
-            System.out.println("Connecting to Server at ("+serverPort+", "+serverAddress +")...");
-            Socket serverSocket = new Socket(serverAddress, serverPort);
+            Socket serverSocket = new Socket(SERVER_ADDRESS, USER_SERVER_PORT);
             System.out.println("Connected to Server");
             
             DataOutputStream streamOut = new DataOutputStream(serverSocket.getOutputStream());
+            DataInputStream streamIn = new DataInputStream(serverSocket.getInputStream());
                 
-            //obtain the message from the user and send it to Server
-            //the communication ends when the user inputs "done"
-            String line = "";
-            while(!line.equals("done")) {
+            /* 1st message to server: my username */
+            streamOut.writeUTF(packageMessage(username));
+            streamOut.flush();
+
+            /* Recieve acknowledgement from server */
+            System.out.println(streamIn.readUTF());
+
+            /* Loop to forward messages to server. Terminates when user types "logoff" */
+            String fromUser = "";
+            String toServer = "";
+            String fromServer = "";
+            while(!fromUser.equals("logoff")) {
                 try {  
+                    /* Read message from user */
                     System.out.print("Type message: ");
-                    line = console.nextLine();
+                    fromUser = console.nextLine();
                     
-                    String packagedMsg = packageMessage(line);
-                    streamOut.writeUTF(packagedMsg);
+                    /* Send message to server */ 
+                    toServer = packageMessage(fromUser);
+                    streamOut.writeUTF(toServer);
                     streamOut.flush();
-                    System.out.println("Message sent");
-                    
+
+                    if (fromUser.equals("logoff")) {
+                        fromServer = streamIn.readUTF();
+                        System.out.println(fromServer);
+                    }
+
                 } catch(IOException ioe) {  
                     System.out.println("Sending error: " + ioe.getMessage());
                 }
@@ -41,6 +58,7 @@ public class User {
             //close all the sockets and console 
             console.close();
             streamOut.close();
+            streamIn.close();
             serverSocket.close();
             
         }
@@ -55,13 +73,11 @@ public class User {
     private String packageMessage(String message) throws Exception {
         StringBuilder acc = new StringBuilder();
         acc.append(message);
-        
         return acc.toString();
     }
     
     /**
-     * args[0] ; port that Alice will connect to (Mallory's port)
-     * args[1] ; program configuration
+     * args[0] ; username
      */
     public static void main(String[] args) {
         
