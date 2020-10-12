@@ -31,9 +31,9 @@ public class User {
             System.out.println(streamIn.readUTF());
 
             /* Loop to forward messages to server. Terminates when user types "logoff" */
-            String fromUser = "";
-            String toServer = "";
-            String fromServer = "";
+            String fromUser = "test";
+            String toServer = "test";
+            String fromServer = "test";
             while(!fromUser.equals("logoff")) {
                 try {  
                     /* Read message from user */
@@ -45,11 +45,10 @@ public class User {
                     streamOut.writeUTF(toServer);
                     streamOut.flush();
 
-                    if (fromUser.equals("logoff")) {
+                    if (fromUser.equals("logoff") | fromUser.equalsIgnoreCase("online")) {
                         fromServer = streamIn.readUTF();
                         System.out.println(fromServer);
                     }
-
                 } catch(IOException ioe) {  
                     System.out.println("Sending error: " + ioe.getMessage());
                 }

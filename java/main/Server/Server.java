@@ -8,7 +8,8 @@ public class Server {
     private static final int USER_LISTEN_PORT = 4232;
     private static final int MESSAGE_LISTEN_PORT = 4771;
 
-    private static List<String> onlineUsers = new ArrayList<String>();
+    private List<UserHandler> onlineUsers = new ArrayList<UserHandler>();
+    private Set<String> usernames = new HashSet<String>();
 	
     public Server() throws Exception {
 
@@ -32,15 +33,18 @@ public class Server {
 
                 /* 1st message: new user object sends its username */ 
                 username = dis.readUTF();
-
-                /* create and start a new user thread */
-                UserHandler t = new UserHandler(s, dis, dos, username, onlineUsers);
-
-                /* add new user to our list of people online*/
-                onlineUsers.add(username);
-
-                /* 1st response: notify user has been logged in */
-                dos.writeUTF(packageMessage(username + " successfully logged in"));
+                
+                if(!usernames.contains(username)) {
+                	usernames.add(username);
+                	System.out.println("New user connected");
+                	/* create and start a new user thread */
+                    UserHandler t = new UserHandler(s, dis, dos, username, this);
+                    /* 1st response: notify user has been logged in */
+                    onlineUsers.add(t);
+                    dos.writeUTF(packageMessage(username + " successfully logged in")); 
+                } else {
+                	dos.writeUTF(packageMessage("the username " + username + "is taken"));
+                }
 
             } catch (Exception e) {
                 s.close();
@@ -63,6 +67,14 @@ public class Server {
         acc.append(message);
         return acc.toString();
     }
+	
+	public List<UserHandler> getUsersOnline() {
+		return onlineUsers;
+	}
+	
+	public void setUsersOnline(List<UserHandler> newOnlineList) {
+		onlineUsers = newOnlineList;
+	}
    
     /**
      * main method 

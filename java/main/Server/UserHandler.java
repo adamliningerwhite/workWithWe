@@ -10,7 +10,7 @@ public class UserHandler extends Thread {
     private final Socket s; 
 
     private String username;
-    private List<String> onlineUsers;
+    private Server server;
 
      /**
       * Constructor 
@@ -18,12 +18,12 @@ public class UserHandler extends Thread {
       * @param dis
       * @param dos
       */
-     public UserHandler(Socket s, DataInputStream dis, DataOutputStream dos, String username, List<String> onlineUsers) { 
+     public UserHandler(Socket s, DataInputStream dis, DataOutputStream dos, String username, Server server) { 
          this.s = s; 
          this.dis = dis; 
          this.dos = dos; 
          this.username = username;
-         this.onlineUsers = onlineUsers;
+         this.server = server;
 
          this.start();
      } 
@@ -46,10 +46,11 @@ public class UserHandler extends Thread {
                     dos.writeUTF(msg);
                     dos.flush();
 
-                    s.close(); 
-                    onlineUsers.remove(username); // take user off the list of people online
+                    s.close();  // take user off the list of people online
                     break; 
-                } 
+                } else if (msg.equals("online")) {
+                	sendList();
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -63,6 +64,23 @@ public class UserHandler extends Thread {
         } catch(IOException e){ 
             e.printStackTrace(); 
         } 
+    }
+     
+    private void sendList() throws Exception {
+    	List<UserHandler> users = server.getUsersOnline();
+    	String res = "People online: \n";
+    	for(UserHandler user : users) {
+    		//if(user.getUsername() != this.username) {
+    			res += user.getUsername() + "\n";
+    		//}
+    	}
+    	res = packageMessage(res);
+    	dos.writeUTF(res);
+    	dos.flush();
+    }
+    
+    public String getUsername() {
+    	return username;
     }
 
     private String packageMessage(String message) throws Exception {
