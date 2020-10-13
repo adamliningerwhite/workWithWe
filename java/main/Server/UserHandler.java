@@ -43,6 +43,7 @@ public class UserHandler extends Thread {
                     System.out.println(username + " is logging off...");
 
                     msg = packageMessage(username + " successfully logged off");
+                    server.removeUser(username);
                     dos.writeUTF(msg);
                     dos.flush();
 
@@ -70,9 +71,9 @@ public class UserHandler extends Thread {
     	List<UserHandler> users = server.getUsersOnline();
     	String res = "People online: \n";
     	for(UserHandler user : users) {
-    		//if(user.getUsername() != this.username) {
+    		if(user.getUsername() != this.username) {
     			res += user.getUsername() + "\n";
-    		//}
+    		}
     	}
     	res = packageMessage(res);
     	dos.writeUTF(res);

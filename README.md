@@ -1,4 +1,4 @@
-# Work With Me 
+# Work With Me
 
 Riti Sharma, Renae Tamura, Jack Bernstein, Adam White
 
@@ -29,8 +29,12 @@ Riti Sharma, Renae Tamura, Jack Bernstein, Adam White
 
 ## How to Run
 
-1. Start server: java Server 
-2. Start client(s): java User adumb_white 
-3. Send messages to server 
-4. Logoff all users 
+1. Start server: java Server
+2. Start client(s): java User adumb_white
+3. Send messages to server
+4. Logoff all users
 5. Kill Server
+
+## Bugs to fix
+
+1. Server program throws error if a logged in user kills their program instead of properly logging off

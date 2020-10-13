@@ -75,6 +75,15 @@ public class Server {
 	public void setUsersOnline(List<UserHandler> newOnlineList) {
 		onlineUsers = newOnlineList;
 	}
+	
+	public void removeUser(String username) {
+		for(int i = 0; i < onlineUsers.size(); i++) {
+			if(onlineUsers.get(i).getUsername() == username) {
+				onlineUsers.remove(i);
+				break;
+			}
+		}
+	}
    
     /**
      * main method 
