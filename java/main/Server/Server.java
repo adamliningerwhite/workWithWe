@@ -25,7 +25,6 @@ public class Server {
             try {
                 /* Accept incoming connections */
                 s = mainServer.accept();
-                System.out.println("New user connected");
 
                 /* obtaining input and out streams */
                 DataInputStream dis = new DataInputStream(s.getInputStream()); 
