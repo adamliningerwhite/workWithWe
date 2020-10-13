@@ -35,6 +35,7 @@ public class User {
             String toServer = "test";
             String fromServer = "test";
             ServerHandler handler = new ServerHandler(streamOut, streamIn);
+            Thread.sleep(5);
             System.out.println("Type 'Logoff' to sign out");
             while(!fromUser.equals("Logoff")) {
                 try {

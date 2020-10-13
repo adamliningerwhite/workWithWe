@@ -23,50 +23,35 @@ public class Server {
             String username;
 
             try {
-                /* Accept incoming connections */
                 s = mainServer.accept();
-
-                /* obtaining input and out streams */
+                
                 DataInputStream dis = new DataInputStream(s.getInputStream()); 
                 DataOutputStream dos = new DataOutputStream(s.getOutputStream());
-
-                /* 1st message: new user object sends its username */ 
+                
                 username = dis.readUTF();
                 
                 if(!usernames.contains(username)) {
                 	usernames.add(username);
                 	System.out.println("New user connected");
-                	/* create and start a new user thread */
                     UserHandler t = new UserHandler(s, dis, dos, username, this);
-                    /* 1st response: notify user has been logged in */
                     onlineUsers.add(t);
-                    dos.writeUTF(packageMessage(username + " successfully logged in")); 
+                    dos.writeUTF(username + " successfully logged in"); 
                 } else {
-                	dos.writeUTF(packageMessage("the username " + username + "is taken"));
+                	dos.writeUTF("the username " + username + "is taken");
                 }
-
             } catch (Exception e) {
                 s.close();
                 e.printStackTrace();
-
                 break; // TODO: don't think we want to break here, but otherwise next block is unreachable
             }
         } 
 
-        // NOT SURE WHEN/HOW TO HANDLE CLOSING MAIN SERVER
         try {
             mainServer.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-	private String packageMessage(String message) throws Exception {
-        StringBuilder acc = new StringBuilder();
-        acc.append(message);
-        return acc.toString();
-    }
-	
 	public List<UserHandler> getUsersOnline() {
 		return onlineUsers;
 	}
@@ -84,9 +69,6 @@ public class Server {
 		}
 	}
    
-    /**
-     * main method 
-     */
     public static void main(String[] args) {
         //check for correct # of parameters
         if (args.length > 0) {

@@ -8,7 +8,6 @@ public class UserHandler extends Thread {
     private final DataInputStream dis; 
     private final DataOutputStream dos; 
     private final Socket s; 
-
     private String username;
     private Server server;
 
@@ -24,41 +23,31 @@ public class UserHandler extends Thread {
          this.dos = dos; 
          this.username = username;
          this.server = server;
-
          this.start();
      } 
 
      @Override 
      public void run() {
-
         System.out.println("Thread started for: " + username);
-
         String msg;
         while (true)  { 
             try { 
-                // receive message from user
                 msg = dis.readUTF(); 
-
                 if(msg.equals("Logoff")) {  
                     System.out.println(username + " is logging off...");
-
-                    msg = packageMessage(username + " successfully logged off");
+                    msg = username + " successfully logged off";
                     server.removeUser(username);
                     dos.writeUTF(msg);
                     dos.flush();
-
-                    s.close();  // take user off the list of people online
+                    s.close(); 
                     break; 
                 } else if (msg.equals("online")) {
                 	sendList();
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-
-        /* Close resources */
         try { 
             this.dis.close(); 
             this.dos.close(); 
@@ -69,17 +58,17 @@ public class UserHandler extends Thread {
      
     private void sendList() throws Exception {
     	List<UserHandler> users = server.getUsersOnline();
-    	String res = "People online: \n";
+    	String res;
     	if(users.size() == 1 && users.get(0).getUsername() == username) {
     		res = "Nobody is currently online";
     	} else {
+    		res = "People online: \n";
     		for(UserHandler user : users) {
         		if(user.getUsername() != this.username) {
         			res += user.getUsername() + "\n";
         		}
         	}
     	}
-    	res = packageMessage(res);
     	dos.writeUTF(res);
     	dos.flush();
     }
@@ -87,11 +76,4 @@ public class UserHandler extends Thread {
     public String getUsername() {
     	return username;
     }
-
-    private String packageMessage(String message) throws Exception {
-        StringBuilder acc = new StringBuilder();
-        acc.append(message);
-        return acc.toString();
-    }
-   
 }
