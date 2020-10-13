@@ -28,8 +28,13 @@ public class ServerHandler extends Thread {
 				streamOut.flush();
 				String res = streamIn.readUTF();
 				System.out.println(res);
-				System.out.print("Type message: ");
-				Thread.sleep(10000);
+				for(int i = 0; i < 1000; i++) {
+					if(running) {
+						Thread.sleep(10);
+					} else {
+						break;
+					}
+				}
 			}
 		} catch (Exception e) {
 			System.out.println(e);

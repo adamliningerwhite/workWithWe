@@ -70,10 +70,14 @@ public class UserHandler extends Thread {
     private void sendList() throws Exception {
     	List<UserHandler> users = server.getUsersOnline();
     	String res = "People online: \n";
-    	for(UserHandler user : users) {
-    		if(user.getUsername() != this.username) {
-    			res += user.getUsername() + "\n";
-    		}
+    	if(users.size() == 1 && users.get(0).getUsername() == username) {
+    		res = "Nobody is currently online";
+    	} else {
+    		for(UserHandler user : users) {
+        		if(user.getUsername() != this.username) {
+        			res += user.getUsername() + "\n";
+        		}
+        	}
     	}
     	res = packageMessage(res);
     	dos.writeUTF(res);

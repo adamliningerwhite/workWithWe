@@ -34,14 +34,10 @@ public class User {
             String fromUser = "test";
             String toServer = "test";
             String fromServer = "test";
-            while(!fromUser.equals("logoff")) {
-                try {  
-                	
-                	ServerHandler handler = new ServerHandler(streamOut, streamIn);
-                	Thread.sleep(10);
-                	
-                    /* Read message from user */
-                    System.out.print("Type message: ");
+            ServerHandler handler = new ServerHandler(streamOut, streamIn);
+            System.out.println("Type 'Logoff' to sign out");
+            while(!fromUser.equals("Logoff")) {
+                try {
                     fromUser = console.nextLine();
                     
                     /* Send message to server */ 
@@ -50,7 +46,7 @@ public class User {
                     streamOut.flush();
                     
 
-                    if (fromUser.equals("logoff")) {
+                    if (fromUser.equals("Logoff")) {
                     	handler.end();
                         fromServer = streamIn.readUTF();
                         System.out.println(fromServer);
