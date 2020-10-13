@@ -36,6 +36,10 @@ public class User {
             String fromServer = "test";
             while(!fromUser.equals("logoff")) {
                 try {  
+                	
+                	ServerHandler handler = new ServerHandler(streamOut, streamIn);
+                	Thread.sleep(10);
+                	
                     /* Read message from user */
                     System.out.print("Type message: ");
                     fromUser = console.nextLine();
@@ -44,8 +48,10 @@ public class User {
                     toServer = packageMessage(fromUser);
                     streamOut.writeUTF(toServer);
                     streamOut.flush();
+                    
 
-                    if (fromUser.equals("logoff") | fromUser.equalsIgnoreCase("online")) {
+                    if (fromUser.equals("logoff")) {
+                    	handler.end();
                         fromServer = streamIn.readUTF();
                         System.out.println(fromServer);
                     }
