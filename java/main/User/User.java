@@ -7,21 +7,25 @@ public class User {
     private static final int USER_SERVER_PORT = 4232;
     private static final int MESSAGE_SERVER_PORT = 4771;
     private static final String SERVER_ADDRESS = "localhost";
-
     private String username;
 
     public User(String username) throws Exception {
 
         this.username = username;
-
+        createUser();
+    }
+    
+    private void createUser() throws Exception {
         Scanner console = new Scanner(System.in);
             
         try{
-            Socket serverSocket = new Socket(SERVER_ADDRESS, USER_SERVER_PORT);
+            Socket s = new Socket(SERVER_ADDRESS, USER_SERVER_PORT);
             System.out.println("Connected to Server");
             
-            DataOutputStream streamOut = new DataOutputStream(serverSocket.getOutputStream());
-            DataInputStream streamIn = new DataInputStream(serverSocket.getInputStream());
+            DataOutputStream streamOut = new DataOutputStream(s.getOutputStream());
+            DataInputStream streamIn = new DataInputStream(s.getInputStream());
+            
+            
                 
             /* 1st message to server: my username */
             streamOut.writeUTF(packageMessage(username));
@@ -31,9 +35,9 @@ public class User {
             System.out.println(streamIn.readUTF());
 
             /* Loop to forward messages to server. Terminates when user types "logoff" */
-            String fromUser = "test";
-            String toServer = "test";
-            String fromServer = "test";
+            String fromUser = "";
+            String toServer = "";
+            String fromServer = "";
             ServerHandler handler = new ServerHandler(streamOut, streamIn);
             Thread.sleep(5);
             System.out.println("Type 'Logoff' to sign out");
@@ -61,7 +65,7 @@ public class User {
             console.close();
             streamOut.close();
             streamIn.close();
-            serverSocket.close();
+            s.close();
             
         }
         catch(IOException e) {

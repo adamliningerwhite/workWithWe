@@ -38,5 +38,7 @@ Riti Sharma, Renae Tamura, Jack Bernstein, Adam White
 ## Bugs to fix
 
 1. Server program throws error if a logged in user kills their program instead of properly logging off
-2. Two print statements every time a user connects
-3. Handle logging off in thread
+
+## To do
+
+1. Pass in username through console input, not as a parameter
