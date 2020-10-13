@@ -39,7 +39,7 @@ public class UserHandler extends Thread {
                 // receive message from user
                 msg = dis.readUTF(); 
 
-                if(msg.equals("logoff")) {  
+                if(msg.equals("Logoff")) {  
                     System.out.println(username + " is logging off...");
 
                     msg = packageMessage(username + " successfully logged off");
