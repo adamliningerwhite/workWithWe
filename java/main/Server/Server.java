@@ -37,7 +37,7 @@ public class Server {
                     onlineUsers.add(t);
                     dos.writeUTF(username + " successfully logged in"); 
                 } else {
-                	dos.writeUTF("the username " + username + "is taken");
+                	dos.writeUTF("the username " + username + " is taken");
                 }
             } catch (Exception e) {
                 s.close();
@@ -67,6 +67,7 @@ public class Server {
 				break;
 			}
 		}
+		usernames.remove(username);
 	}
    
     public static void main(String[] args) {

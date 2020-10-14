@@ -32,40 +32,43 @@ public class User {
             streamOut.flush();
 
             /* Recieve acknowledgement from server */
-            System.out.println(streamIn.readUTF());
-
-            /* Loop to forward messages to server. Terminates when user types "logoff" */
-            String fromUser = "";
-            String toServer = "";
-            String fromServer = "";
-            ServerHandler handler = new ServerHandler(streamOut, streamIn);
-            Thread.sleep(5);
-            System.out.println("Type 'Logoff' to sign out");
-            while(!fromUser.equals("Logoff")) {
-                try {
-                    fromUser = console.nextLine();
-                    
-                    /* Send message to server */ 
-                    toServer = packageMessage(fromUser);
-                    streamOut.writeUTF(toServer);
-                    streamOut.flush();
-                    
-
-                    if (fromUser.equals("Logoff")) {
-                    	handler.end();
-                        fromServer = streamIn.readUTF();
-                        System.out.println(fromServer);
-                    }
-                } catch(IOException ioe) {  
-                    System.out.println("Sending error: " + ioe.getMessage());
-                }
-            }
+            String res = streamIn.readUTF();
+            System.out.println(res);
             
-            //close all the sockets and console 
-            console.close();
-            streamOut.close();
-            streamIn.close();
-            s.close();
+            if(res.contains("successfully logged in")) {
+	            /* Loop to forward messages to server. Terminates when user types "logoff" */
+	            String fromUser = "";
+	            String toServer = "";
+	            String fromServer = "";
+	            ServerHandler handler = new ServerHandler(streamOut, streamIn);
+	            Thread.sleep(5);
+	            System.out.println("Type 'Logoff' to sign out");
+	            while(!fromUser.equals("Logoff")) {
+	                try {
+	                    fromUser = console.nextLine();
+	                    
+	                    /* Send message to server */ 
+	                    toServer = packageMessage(fromUser);
+	                    streamOut.writeUTF(toServer);
+	                    streamOut.flush();
+	                    
+	
+	                    if (fromUser.equals("Logoff")) {
+	                    	handler.end();
+	                        fromServer = streamIn.readUTF();
+	                        System.out.println(fromServer);
+	                    }
+	                } catch(IOException ioe) {  
+	                    System.out.println("Sending error: " + ioe.getMessage());
+	                }
+	            }
+	            
+	            //close all the sockets and console 
+	            console.close();
+	            streamOut.close();
+	            streamIn.close();
+	            s.close();
+            }
             
         }
         catch(IOException e) {
