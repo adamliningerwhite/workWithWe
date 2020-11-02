@@ -10,6 +10,15 @@ public class Server {
 
     private List<UserHandler> onlineUsers = new ArrayList<UserHandler>();
     private Set<String> usernames = new HashSet<String>();
+    private Map<String, String> userPassCombo = new HashMap<String, String>();
+
+    private DataInputStream dis;
+    private DataOutputStream dos;
+    private String option;
+    private String username;
+    private String password;
+    private Socket s = null;
+
 
     public Server() throws Exception {
 
@@ -19,22 +28,33 @@ public class Server {
 
         /* infinite loop to accept user connections */
         while (true) {
-            Socket s = null;
-            String option;
-            String username;
-            String password;
-
             try {
                 s = mainServer.accept();
 
-                DataInputStream dis = new DataInputStream(s.getInputStream());
-                DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+                dis = new DataInputStream(s.getInputStream());
+                dos = new DataOutputStream(s.getOutputStream());
 
                 String input = dis.readUTF();
                 String[] parsed = input.split(",");
                 option = parsed[0];
                 username = parsed[1];
                 password = parsed[2];
+
+                switch(option) {
+                  case "1":
+                    createNewUser();
+                    break;
+                  case "2":
+                    logIn();
+                    break;
+                  case "3":
+                    retrievePassword();
+                    break;
+                  default:
+                    System.out.println("Incorrect input!");
+                    break;
+
+                }
 
                 if(!usernames.contains(username)) {
                 	usernames.add(username);
@@ -75,6 +95,31 @@ public class Server {
 		}
 		usernames.remove(username);
 	}
+
+  private void logIn() throws Exception{
+    if(usernames.contains(username)){
+
+    } else{
+      dos.writeUTF("the username " + username + " does not exist");
+    }
+  }
+
+  private void createNewUser() throws Exception{
+    if(!usernames.contains(username)) {
+      usernames.add(username);
+      userPassCombo.put(username, password);
+      System.out.println("New user connected");
+        UserHandler t = new UserHandler(s, dis, dos, username, this);
+        onlineUsers.add(t);
+        dos.writeUTF(username + " successfully logged in");
+    } else {
+      dos.writeUTF("the username " + username + " is taken");
+    }
+  }
+
+  private void retrievePassword() {
+
+  }
 
     public static void main(String[] args) {
         //check for correct # of parameters
