@@ -33,6 +33,8 @@ public class Server {
         ReadHelper userDataReader = new ReadHelper();
         userMap = userDataReader.readData();
 
+        WriterThread userDataWriter = new WriterThread(this);
+
         /* infinite loop to accept user connections */
         while (true) {
             try {
@@ -85,48 +87,53 @@ public class Server {
             e.printStackTrace();
         }
     }
-	public List<UserHandler> getUsersOnline() {
-		return onlineUsers;
-	}
 
-	public void setUsersOnline(List<UserHandler> newOnlineList) {
-		onlineUsers = newOnlineList;
-	}
-
-	public void removeUser(String username) {
-		for(int i = 0; i < onlineUsers.size(); i++) {
-			if(onlineUsers.get(i).getUsername() == username) {
-				onlineUsers.remove(i);
-				break;
-			}
-		}
-		usernames.remove(username);
-	}
-
-  private void logIn() throws Exception{
-    if(usernames.contains(username)){
-
-    } else{
-      dos.writeUTF("the username " + username + " does not exist");
+    public HashMap<String, UserModel> getUserMap() {
+      return userMap;
     }
-  }
 
-  private void createNewUser() throws Exception{
-    if(!usernames.contains(username)) {
-      usernames.add(username);
-      userPassCombo.put(username, password);
-      System.out.println("New user connected");
-        UserHandler t = new UserHandler(s, dis, dos, username, this);
-        onlineUsers.add(t);
-        dos.writeUTF(username + " successfully logged in");
-    } else {
-      dos.writeUTF("the username " + username + " is taken");
+    public List<UserHandler> getUsersOnline() {
+      return onlineUsers;
     }
-  }
 
-  private void retrievePassword() {
+    public void setUsersOnline(List<UserHandler> newOnlineList) {
+      onlineUsers = newOnlineList;
+    }
 
-  }
+    public void removeUser(String username) {
+      for(int i = 0; i < onlineUsers.size(); i++) {
+        if(onlineUsers.get(i).getUsername() == username) {
+          onlineUsers.remove(i);
+          break;
+        }
+      }
+      usernames.remove(username);
+    }
+
+    private void logIn() throws Exception{
+      if(usernames.contains(username)){
+
+      } else{
+        dos.writeUTF("the username " + username + " does not exist");
+      }
+    }
+
+    private void createNewUser() throws Exception{
+      if(!usernames.contains(username)) {
+        usernames.add(username);
+        userPassCombo.put(username, password);
+        System.out.println("New user connected");
+          UserHandler t = new UserHandler(s, dis, dos, username, this);
+          onlineUsers.add(t);
+          dos.writeUTF(username + " successfully logged in");
+      } else {
+        dos.writeUTF("the username " + username + " is taken");
+      }
+    }
+
+    private void retrievePassword() {
+
+    }
 
     public static void main(String[] args) {
         //check for correct # of parameters
