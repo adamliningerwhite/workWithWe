@@ -96,9 +96,9 @@ public class Server {
 		usernames.remove(username);
 	}
 
-  private void logIn() {
+  private void logIn() throws Exception{
     if(usernames.contains(username)){
-      
+
     } else{
       dos.writeUTF("the username " + username + " does not exist");
     }
