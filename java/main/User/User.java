@@ -3,30 +3,47 @@ import java.net.*;
 import java.util.*;
 
 public class User {
-    
+
     private static final int USER_SERVER_PORT = 4232;
     private static final int MESSAGE_SERVER_PORT = 4771;
     private static final String SERVER_ADDRESS = "localhost";
     private String username;
+    private String password;
+    private Scanner console;
 
-    public User(String username) throws Exception {
-
-        this.username = username;
+    public User() throws Exception {
         createUser();
     }
-    
+
     private void createUser() throws Exception {
-        Scanner console = new Scanner(System.in);
-            
+        console = new Scanner(System.in);
+
         try{
             Socket s = new Socket(SERVER_ADDRESS, USER_SERVER_PORT);
             System.out.println("Connected to Server");
-            
+            System.out.println("Type (1) to Create New User, (2) to Log In, or (3) to Retrieve Password");
+            String option = console.nextLine();
+
+            switch(option) {
+              case "1":
+                newUser();
+                break;
+              case "2":
+                logIn();
+                break;
+              case "3":
+                retrievePassword();
+                break;
+              default:
+                System.out.println("Incorrect input!");
+                break;
+
+            }
             DataOutputStream streamOut = new DataOutputStream(s.getOutputStream());
             DataInputStream streamIn = new DataInputStream(s.getInputStream());
-            
-            
-                
+
+
+
             /* 1st message to server: my username */
             streamOut.writeUTF(packageMessage(username));
             streamOut.flush();
@@ -34,7 +51,7 @@ public class User {
             /* Recieve acknowledgement from server */
             String res = streamIn.readUTF();
             System.out.println(res);
-            
+
             if(res.contains("successfully logged in")) {
 	            /* Loop to forward messages to server. Terminates when user types "logoff" */
 	            String fromUser = "";
@@ -46,30 +63,30 @@ public class User {
 	            while(!fromUser.equals("Logoff")) {
 	                try {
 	                    fromUser = console.nextLine();
-	                    
-	                    /* Send message to server */ 
+
+	                    /* Send message to server */
 	                    toServer = packageMessage(fromUser);
 	                    streamOut.writeUTF(toServer);
 	                    streamOut.flush();
-	                    
-	
+
+
 	                    if (fromUser.equals("Logoff")) {
 	                    	handler.end();
 	                        fromServer = streamIn.readUTF();
 	                        System.out.println(fromServer);
 	                    }
-	                } catch(IOException ioe) {  
+	                } catch(IOException ioe) {
 	                    System.out.println("Sending error: " + ioe.getMessage());
 	                }
 	            }
-	            
-	            //close all the sockets and console 
+
+	            //close all the sockets and console
 	            console.close();
 	            streamOut.close();
 	            streamIn.close();
 	            s.close();
             }
-            
+
         }
         catch(IOException e) {
             //print error
@@ -77,32 +94,59 @@ public class User {
             System.out.println(e);
         }
     }
-	
-    
+
+
     private String packageMessage(String message) throws Exception {
         StringBuilder acc = new StringBuilder();
         acc.append(message);
         return acc.toString();
     }
-    
+
+    private void newUser() {
+      System.out.print("Enter username: ");
+      username = console.nextLine();
+      System.out.print("Enter password: ");
+      String potentialPassword = console.nextLine();
+      System.out.print("Re-enter password: ");
+      String repeatedPassword = console.nextLine();
+      if(potentialPassword.equals(repeatedPassword)){
+        password = potentialPassword;
+        System.out.println("User successfully created!");
+      } else {
+        System.out.println("Passwords do not match!");
+        newUser();
+      }
+    }
+
+    private void logIn() {
+      System.out.print("Enter username: ");
+      username = console.nextLine();
+      System.out.print("Enter password: ");
+      password = console.nextLine();
+    }
+
+    private void retrievePassword() {
+      
+    }
+
     /**
      * args[0] ; username
      */
     public static void main(String[] args) {
-        
+
         //check for correct # of parameters
-        if (args.length != 1) {
+        if (args.length != 0) {
             System.out.println("Incorrect number of parameters");
         } else {
             //Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-            
+
             //create Alice to start communication
             try {
-                User user = new User(args[0]);
+                User user = new User();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        
+
     }
 }
