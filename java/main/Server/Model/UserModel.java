@@ -1,17 +1,21 @@
 package java.main.Server.Model;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class UserModel {
     
-    String username;
-    String password;
-    List<User> friends;
+    private String username;
+    private String password;
+    private List<UserModel> friends;
+    private String sessionKey;
+    private String encKey;
+    private String macKey;
 
     public UserModel(String username, String password) {
         this.username = username;
         this.password = password;
-        this.friends = new ArrayList<User>();
+        this.friends = new ArrayList<UserModel>();
     }
 
     public String getUsername() {
@@ -30,15 +34,15 @@ public class UserModel {
         this.password = newPass;
     }
 
-    public List<User> getFriends() {
+    public List<UserModel> getFriends() {
         return this.friends;
     }
 
-    public void addFriend(User newFriend) {
+    public void addFriend(UserModel newFriend) {
         friends.add(newFriend);
     }
 
-    public void removeFriend(User oldFriend) {
+    public void removeFriend(UserModel oldFriend) {
         friends.remove(oldFriend);
     }
 }
