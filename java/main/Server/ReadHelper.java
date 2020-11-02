@@ -64,10 +64,4 @@ public class ReadHelper {
             user.setFriends(new ArrayList<String>());
         }
     }
-
-    // public static void main(String[] args) {
-    //     ReadHelper test = new ReadHelper();
-    //     HashMap<String, UserModel> users = test.readData();
-    //     System.out.println(users);
-    // }
 }
