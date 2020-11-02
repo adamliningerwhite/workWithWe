@@ -31,8 +31,8 @@ public class Server {
             try {
                 s = mainServer.accept();
 
-                DataInputStream dis = new DataInputStream(s.getInputStream());
-                DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+                dis = new DataInputStream(s.getInputStream());
+                dos = new DataOutputStream(s.getOutputStream());
 
                 String input = dis.readUTF();
                 String[] parsed = input.split(",");
