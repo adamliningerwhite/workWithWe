@@ -45,4 +45,28 @@ public class UserModel {
     public void removeFriend(UserModel oldFriend) {
         friends.remove(oldFriend);
     }
+
+    public String getSessionKey() {
+        return sessionKey;
+    }
+
+    public String setSessionKey(String newSessionKey) {
+        this.sessionKey = newSessionKey;
+    }
+
+    public String getEncKey() {
+        return encKey;
+    }
+
+    public void setEncKey(String newEncKey) {
+        this.encKey = newEncKey;
+    }
+
+    public String getMacKey() {
+        return macKey;
+    }
+
+    public void setMacKey(String newMacKey){
+        this.macKey = newMacKey;
+    }
 }
