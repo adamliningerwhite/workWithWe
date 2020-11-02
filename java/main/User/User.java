@@ -10,6 +10,9 @@ public class User {
     private String username;
     private String password;
     private Scanner console;
+    private Socket s;
+    private DataOutputStream streamOut;
+    private DataInputStream streamIn;
 
     public User() throws Exception {
         createUser();
@@ -19,11 +22,12 @@ public class User {
         console = new Scanner(System.in);
 
         try{
-            Socket s = new Socket(SERVER_ADDRESS, USER_SERVER_PORT);
+            s = new Socket(SERVER_ADDRESS, USER_SERVER_PORT);
+            streamOut = new DataOutputStream(s.getOutputStream());
+            streamIn = new DataInputStream(s.getInputStream());
             System.out.println("Connected to Server");
             System.out.println("Type (1) to Create New User, (2) to Log In, or (3) to Retrieve Password");
             String option = console.nextLine();
-
             switch(option) {
               case "1":
                 newUser();
@@ -39,15 +43,6 @@ public class User {
                 break;
 
             }
-            DataOutputStream streamOut = new DataOutputStream(s.getOutputStream());
-            DataInputStream streamIn = new DataInputStream(s.getInputStream());
-
-
-
-            /* 1st message to server: my username */
-            streamOut.writeUTF(packageMessage(username));
-            streamOut.flush();
-
             /* Recieve acknowledgement from server */
             String res = streamIn.readUTF();
             System.out.println(res);
@@ -102,7 +97,7 @@ public class User {
         return acc.toString();
     }
 
-    private void newUser() {
+    private void newUser() throws Exception {
       System.out.print("Enter username: ");
       username = console.nextLine();
       System.out.print("Enter password: ");
@@ -115,18 +110,23 @@ public class User {
       } else {
         System.out.println("Passwords do not match!");
         newUser();
+        return;
       }
+      streamOut.writeUTF("1," + username + "," + password);
+      streamOut.flush();
     }
 
-    private void logIn() {
+    private void logIn() throws Exception {
       System.out.print("Enter username: ");
       username = console.nextLine();
       System.out.print("Enter password: ");
       password = console.nextLine();
+      streamOut.writeUTF("2," + username + "," + password);
+      streamOut.flush();
     }
 
     private void retrievePassword() {
-      
+
     }
 
     /**

@@ -41,4 +41,5 @@ Riti Sharma, Renae Tamura, Jack Bernstein, Adam White
 
 ## To do
 
-1. Pass in username through console input, not as a parameter
+1. Show asterisks when inputing password
+2. Entire password retrieval process

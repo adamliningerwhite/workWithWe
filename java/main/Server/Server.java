@@ -1,7 +1,7 @@
-import java.io.*; 
-import java.text.*; 
-import java.util.*; 
-import java.net.*; 
+import java.io.*;
+import java.text.*;
+import java.util.*;
+import java.net.*;
 
 public class Server {
 
@@ -10,7 +10,7 @@ public class Server {
 
     private List<UserHandler> onlineUsers = new ArrayList<UserHandler>();
     private Set<String> usernames = new HashSet<String>();
-	
+
     public Server() throws Exception {
 
         /* Start workWithMe server */
@@ -20,22 +20,28 @@ public class Server {
         /* infinite loop to accept user connections */
         while (true) {
             Socket s = null;
+            String option;
             String username;
+            String password;
 
             try {
                 s = mainServer.accept();
-                
-                DataInputStream dis = new DataInputStream(s.getInputStream()); 
+
+                DataInputStream dis = new DataInputStream(s.getInputStream());
                 DataOutputStream dos = new DataOutputStream(s.getOutputStream());
-                
-                username = dis.readUTF();
-                
+
+                String input = dis.readUTF();
+                String[] parsed = input.split(",");
+                option = parsed[0];
+                username = parsed[1];
+                password = parsed[2];
+
                 if(!usernames.contains(username)) {
                 	usernames.add(username);
                 	System.out.println("New user connected");
                     UserHandler t = new UserHandler(s, dis, dos, username, this);
                     onlineUsers.add(t);
-                    dos.writeUTF(username + " successfully logged in"); 
+                    dos.writeUTF(username + " successfully logged in");
                 } else {
                 	dos.writeUTF("the username " + username + " is taken");
                 }
@@ -44,7 +50,7 @@ public class Server {
                 e.printStackTrace();
                 break; // TODO: don't think we want to break here, but otherwise next block is unreachable
             }
-        } 
+        }
 
         try {
             mainServer.close();
@@ -55,11 +61,11 @@ public class Server {
 	public List<UserHandler> getUsersOnline() {
 		return onlineUsers;
 	}
-	
+
 	public void setUsersOnline(List<UserHandler> newOnlineList) {
 		onlineUsers = newOnlineList;
 	}
-	
+
 	public void removeUser(String username) {
 		for(int i = 0; i < onlineUsers.size(); i++) {
 			if(onlineUsers.get(i).getUsername() == username) {
@@ -69,7 +75,7 @@ public class Server {
 		}
 		usernames.remove(username);
 	}
-   
+
     public static void main(String[] args) {
         //check for correct # of parameters
         if (args.length > 0) {
@@ -81,6 +87,6 @@ public class Server {
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }		
+        }
     }
 }
