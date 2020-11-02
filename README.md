@@ -42,4 +42,4 @@ Riti Sharma, Renae Tamura, Jack Bernstein, Adam White
 ## To do
 
 1. Show asterisks when inputing password
-2. Entire password retrieval process
+2. Entire password retrieval process (if we even want to do password retrieval)
