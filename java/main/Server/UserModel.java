@@ -1,5 +1,3 @@
-package java.main.Server.Model;
-
 import java.util.List;
 import java.util.ArrayList;
 
@@ -50,7 +48,7 @@ public class UserModel {
         return sessionKey;
     }
 
-    public String setSessionKey(String newSessionKey) {
+    public void setSessionKey(String newSessionKey) {
         this.sessionKey = newSessionKey;
     }
 

@@ -1,5 +1,3 @@
-package java.main.Server.Helper;
-
 public class ReadHelper {
 
     private static final String LOGIN_DATA_PATH = "../Data/login.txt";
