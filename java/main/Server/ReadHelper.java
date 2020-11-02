@@ -1,8 +1,15 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.Buffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+
 public class ReadHelper {
 
-    private static final String LOGIN_DATA_PATH = "../Data/login.txt";
-
-    HashMap<String, User> users;
+    private static final String DATA_PATH = "Data/";
+    private static final String LOGIN_DATA_PATH = DATA_PATH + "login.txt";
 
     /**
      * 
@@ -14,7 +21,53 @@ public class ReadHelper {
      * 
      * @return the list of workWithMe Users 
      */
-    public List<User> readData() {
+    public HashMap<String, UserModel> readData() {
+        HashMap<String, UserModel> usersMap = new HashMap<String, UserModel>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(LOGIN_DATA_PATH));
+            String line = reader.readLine();
 
+            while (line != null) {
+                String[] loginPieces = line.split(",");
+                if (loginPieces.length != 2) {
+                    continue;
+                }
+                String username = loginPieces[0].trim();
+                String password = loginPieces[1].trim();
+                UserModel user = new UserModel(username, password);
+                addFriends(user);
+
+                usersMap.put(username, user);
+
+                line = reader.readLine();
+            }
+            reader.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } 
+
+        return usersMap;
     }
+
+    private void addFriends(UserModel user) {
+        String path = DATA_PATH + user.getUsername() + ".txt";
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(path));
+            String line = reader.readLine();
+            while (line != null) {
+                user.addFriend(line.trim());
+                line = reader.readLine();
+            }
+            reader.close();
+        } catch (IOException e) {
+            user.setFriends(new ArrayList<String>());
+        }
+    }
+
+    // public static void main(String[] args) {
+    //     ReadHelper test = new ReadHelper();
+    //     HashMap<String, UserModel> users = test.readData();
+    //     System.out.println(users);
+    // }
 }

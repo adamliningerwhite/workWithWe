@@ -5,7 +5,7 @@ public class UserModel {
     
     private String username;
     private String password;
-    private List<UserModel> friends;
+    private List<String> friends;
     private String sessionKey;
     private String encKey;
     private String macKey;
@@ -13,7 +13,7 @@ public class UserModel {
     public UserModel(String username, String password) {
         this.username = username;
         this.password = password;
-        this.friends = new ArrayList<UserModel>();
+        this.friends = new ArrayList<String>();
     }
 
     public String getUsername() {
@@ -32,15 +32,19 @@ public class UserModel {
         this.password = newPass;
     }
 
-    public List<UserModel> getFriends() {
+    public List<String> getFriends() {
         return this.friends;
     }
 
-    public void addFriend(UserModel newFriend) {
+    public void setFriends(List<String> newFriends) {
+        this.friends = newFriends;
+    }
+
+    public void addFriend(String newFriend) {
         friends.add(newFriend);
     }
 
-    public void removeFriend(UserModel oldFriend) {
+    public void removeFriend(String oldFriend) {
         friends.remove(oldFriend);
     }
 
@@ -66,5 +70,9 @@ public class UserModel {
 
     public void setMacKey(String newMacKey){
         this.macKey = newMacKey;
+    }
+
+    public String toString() {
+        return "username: " + username + ", password: " + password + ", friends: " + friends + "\n";
     }
 }

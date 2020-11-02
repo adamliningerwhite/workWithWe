@@ -12,6 +12,10 @@ public class Server {
     private Set<String> usernames = new HashSet<String>();
     private Map<String, String> userPassCombo = new HashMap<String, String>();
 
+    // Map of program users
+    // key is username string, value is their UserModel object
+    private HashMap<String, UserModel> userMap;
+
     private DataInputStream dis;
     private DataOutputStream dos;
     private String option;
@@ -25,6 +29,9 @@ public class Server {
         /* Start workWithMe server */
         System.out.println("Started WorkWithMe Server");
         ServerSocket mainServer = new ServerSocket(USER_LISTEN_PORT);
+
+        ReadHelper userDataReader = new ReadHelper();
+        userMap = userDataReader.readData();
 
         /* infinite loop to accept user connections */
         while (true) {
