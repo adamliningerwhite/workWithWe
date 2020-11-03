@@ -1,6 +1,6 @@
 public class WriterThread extends Thread {
-    
-    WriteHelper writer; 
+
+    WriteHelper writer;
     Server server;
 
     public WriterThread(Server server) {
@@ -12,8 +12,8 @@ public class WriterThread extends Thread {
     @Override
     public void run() {
         while (true) {
-            try{ 
-                Thread.sleep(15000);
+            try{
+                Thread.sleep(500);
                 writer.writeAllData(server.getUserMap());
             } catch(InterruptedException e) {
                 e.printStackTrace();

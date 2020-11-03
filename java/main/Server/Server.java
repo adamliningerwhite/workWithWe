@@ -56,23 +56,9 @@ public class Server {
                   case "2":
                     logIn();
                     break;
-                  case "3":
-                    retrievePassword();
-                    break;
                   default:
                     System.out.println("Incorrect input!");
                     break;
-
-                }
-
-                if(!usernames.contains(username)) {
-                	usernames.add(username);
-                	System.out.println("New user connected");
-                    UserHandler t = new UserHandler(s, dis, dos, username, this);
-                    onlineUsers.add(t);
-                    dos.writeUTF(username + " successfully logged in");
-                } else {
-                	dos.writeUTF("the username " + username + " is taken");
                 }
             } catch (Exception e) {
                 s.close();
@@ -111,21 +97,24 @@ public class Server {
     }
 
     private void logIn() throws Exception{
-      if(usernames.contains(username)){
-
-      } else{
+      UserModel currentUser = userMap.get(username);
+      if(currentUser == null){
         dos.writeUTF("the username " + username + " does not exist");
+      } else if (!currentUser.checkPassword(password)) {
+        dos.writeUTF("incorrect password");
+      } else {
+        dos.writeUTF("successfully logged in");
       }
     }
 
     private void createNewUser() throws Exception{
       if(!usernames.contains(username)) {
-        usernames.add(username);
-        userPassCombo.put(username, password);
+        UserModel user = new UserModel(username, password);
+        userMap.put(username, user);
         System.out.println("New user connected");
-          UserHandler t = new UserHandler(s, dis, dos, username, this);
-          onlineUsers.add(t);
-          dos.writeUTF(username + " successfully logged in");
+        UserHandler t = new UserHandler(s, dis, dos, username, this);
+        onlineUsers.add(t);
+        dos.writeUTF(username + " successfully logged in");
       } else {
         dos.writeUTF("the username " + username + " is taken");
       }

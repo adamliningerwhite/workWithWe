@@ -6,12 +6,13 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class WriteHelper {
-    
+
     private static final String DATA_PATH = "Data/";
     private static final String LOGIN_DATA_PATH = DATA_PATH + "login.txt";
+    private HashMap<String, UserModel> userMap;
 
-    public void writeAllData(HashMap<String, UserModel> userMap) {
-
+    public void writeAllData(HashMap<String, UserModel> map) {
+        userMap = map;
         try {
             PrintWriter loginWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGIN_DATA_PATH)));
             PrintWriter userWriter;
@@ -26,14 +27,14 @@ public class WriteHelper {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            } 
+            }
             loginWriter.close();
         } catch(IOException e) {
             e.printStackTrace();
         }
-        
-    }
 
+    }
+    
     public void writeNewUser(UserModel user) {
 
     }
@@ -44,7 +45,7 @@ public class WriteHelper {
 
     // public static void main(String[] args) {
     //     ReadHelper reader = new ReadHelper();
-    //     HashMap<String, UserModel> userMap = reader.readData(); 
+    //     HashMap<String, UserModel> userMap = reader.readData();
     //     userMap.get("renaeeeeee").addFriend("adumb");
     //     WriteHelper writer = new WriteHelper();
     //     writer.writeAllData(userMap);

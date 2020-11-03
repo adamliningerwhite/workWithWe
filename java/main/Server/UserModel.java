@@ -2,7 +2,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class UserModel {
-    
+
     private String username;
     private String password;
     private List<String> friends;
@@ -23,13 +23,17 @@ public class UserModel {
     public void setUsername(String newName) {
         this.username = newName;
     }
-    
+
     public String getPassword() {
         return this.password;
     }
 
     public void setPassword(String newPass) {
         this.password = newPass;
+    }
+
+    public boolean checkPassword(String pass) {
+      return password.equals(pass);
     }
 
     public List<String> getFriends() {

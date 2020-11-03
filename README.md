@@ -37,9 +37,11 @@ Riti Sharma, Renae Tamura, Jack Bernstein, Adam White
 
 ## Bugs to fix
 
-1. Server program throws error if a logged in user kills their program instead of properly logging off
+1. Server program throws error if a logged in user kills their program instead of properly logging off (also happening with incorrect passwords)
+2. Creating new user, two print statements on user end and server end
 
 ## To do
 
 1. Show asterisks when inputing password
 2. Entire password retrieval process (if we even want to do password retrieval)
+3. Restrictions to usernames and passwords
