@@ -56,7 +56,7 @@ public class Server {
                 option = parsed[0];
                 username = parsed[1];
                 password = parsed[2];
-
+                System.out.println("Option: " + option);
                 switch(option) {
                   case "1":
                     createNewUser();
@@ -72,7 +72,7 @@ public class Server {
                       dos.writeUTF(exchangeSessionKey());
                     }
                     dos.flush();
-                    //break;
+                    break;
                   default:
                     System.out.println("Incorrect input!");
                     break;
