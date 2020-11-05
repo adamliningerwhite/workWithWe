@@ -23,6 +23,8 @@ public class User {
     private KeyGen keyGen;
     private RSAPublicKey serverKey;
     private RSAPrivateKey userKey;
+    String res;
+    boolean first = true;
 
     public User() throws Exception {
         createUser();
@@ -36,13 +38,16 @@ public class User {
             streamOut = new DataOutputStream(s.getOutputStream());
             streamIn = new DataInputStream(s.getInputStream());
             System.out.println("Connected to Server");
-            
+
             //TODO: authenticate server here and save RSAPublicKey to file "serverKey"
             //currently just reads a key from file and saves it as the public key for the server
-            String keyPath = streamIn.readUTF();
-            serverKey = readPublicKeyFromFile(keyPath);
-            
-            
+            if(first){
+              String keyPath = streamIn.readUTF();
+              serverKey = readPublicKeyFromFile(keyPath);
+              first = false;
+            }
+
+
             System.out.println("Type (1) to Create New User, (2) to Log In");
             String option = console.nextLine();
             switch(option) {
@@ -54,17 +59,20 @@ public class User {
                 break;
               default:
                 System.out.println("Incorrect input!");
+                res = "incorrect";
                 break;
             }
             /* Recieve acknowledgement from server */
-            String res = streamIn.readUTF();
-            //TODO: decrypt message
+            if(res != "incorrect") {
+              res = streamIn.readUTF();
+            }
+
             System.out.println(res);
-            
-            String transport = streamIn.readUTF();
-            keyGen.decryptKeyTransport(transport);
-            
+
+
             if(res.contains("successfully logged in")) {
+              String transport = streamIn.readUTF();
+              keyGen.decryptKeyTransport(transport);
 	            /* Loop to forward messages to server. Terminates when user types "logoff" */
 	            String fromUser = "";
 	            String toServer = "";
@@ -81,12 +89,12 @@ public class User {
 	                    msg = keyGen.createEncodedMessage(msg);
 	                    streamOut.writeUTF(msg);
 	                    streamOut.flush();
-	                    
+
 	                    if (fromUser.equals("Logoff")) {
 	                    	handler.end();
 	                    	fromServer = streamIn.readUTF();
 	                    	//TODO: decrypt message
-                        
+
                         System.out.println(fromServer);
 	                    }
 	                } catch(IOException ioe) {
@@ -128,8 +136,8 @@ public class User {
         newUser();
         return;
       }
-      
-      //TODO: package message (keep in mind password is not hashed currently) 
+
+      //TODO: package message (keep in mind password is not hashed currently)
       streamOut.writeUTF("1," + username + "," + password);
       streamOut.flush();
     }
@@ -139,10 +147,10 @@ public class User {
       username = console.nextLine();
       System.out.print("Enter password: ");
       password = console.nextLine();
-      
+
       // creates new public and private keys, creates keyGen to encrypt and decrypt
       keyGen = new KeyGen(username, serverKey);
-      
+
       //TODO: package message (without hashing password
       streamOut.writeUTF("2," + username + "," + password);
       streamOut.flush();
@@ -169,7 +177,7 @@ public class User {
 		}
 		return key;
 	}
-    
+
     /**
      * args[0] ; username
      */
