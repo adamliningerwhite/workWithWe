@@ -12,6 +12,10 @@ public class Server {
     private Set<String> usernames = new HashSet<String>();
     private Map<String, String> userPassCombo = new HashMap<String, String>();
 
+    // Map of program users
+    // key is username string, value is their UserModel object
+    private HashMap<String, UserModel> userMap;
+
     private DataInputStream dis;
     private DataOutputStream dos;
     private String option;
@@ -25,6 +29,11 @@ public class Server {
         /* Start workWithMe server */
         System.out.println("Started WorkWithMe Server");
         ServerSocket mainServer = new ServerSocket(USER_LISTEN_PORT);
+
+        ReadHelper userDataReader = new ReadHelper();
+        userMap = userDataReader.readData();
+
+        WriterThread userDataWriter = new WriterThread(this);
 
         /* infinite loop to accept user connections */
         while (true) {
@@ -47,23 +56,9 @@ public class Server {
                   case "2":
                     logIn();
                     break;
-                  case "3":
-                    retrievePassword();
-                    break;
                   default:
                     System.out.println("Incorrect input!");
                     break;
-
-                }
-
-                if(!usernames.contains(username)) {
-                	usernames.add(username);
-                	System.out.println("New user connected");
-                    UserHandler t = new UserHandler(s, dis, dos, username, this);
-                    onlineUsers.add(t);
-                    dos.writeUTF(username + " successfully logged in");
-                } else {
-                	dos.writeUTF("the username " + username + " is taken");
                 }
             } catch (Exception e) {
                 s.close();
@@ -78,48 +73,56 @@ public class Server {
             e.printStackTrace();
         }
     }
-	public List<UserHandler> getUsersOnline() {
-		return onlineUsers;
-	}
 
-	public void setUsersOnline(List<UserHandler> newOnlineList) {
-		onlineUsers = newOnlineList;
-	}
-
-	public void removeUser(String username) {
-		for(int i = 0; i < onlineUsers.size(); i++) {
-			if(onlineUsers.get(i).getUsername() == username) {
-				onlineUsers.remove(i);
-				break;
-			}
-		}
-		usernames.remove(username);
-	}
-
-  private void logIn() throws Exception{
-    if(usernames.contains(username)){
-
-    } else{
-      dos.writeUTF("the username " + username + " does not exist");
+    public HashMap<String, UserModel> getUserMap() {
+      return userMap;
     }
-  }
 
-  private void createNewUser() throws Exception{
-    if(!usernames.contains(username)) {
-      usernames.add(username);
-      userPassCombo.put(username, password);
-      System.out.println("New user connected");
+    public List<UserHandler> getUsersOnline() {
+      return onlineUsers;
+    }
+
+    public void setUsersOnline(List<UserHandler> newOnlineList) {
+      onlineUsers = newOnlineList;
+    }
+
+    public void removeUser(String username) {
+      for(int i = 0; i < onlineUsers.size(); i++) {
+        if(onlineUsers.get(i).getUsername() == username) {
+          onlineUsers.remove(i);
+          break;
+        }
+      }
+      usernames.remove(username);
+    }
+
+    private void logIn() throws Exception{
+      UserModel currentUser = userMap.get(username);
+      if(currentUser == null){
+        dos.writeUTF("the username " + username + " does not exist");
+      } else if (!currentUser.checkPassword(password)) {
+        dos.writeUTF("incorrect password");
+      } else {
+        dos.writeUTF("successfully logged in");
+      }
+    }
+
+    private void createNewUser() throws Exception{
+      if(!usernames.contains(username)) {
+        UserModel user = new UserModel(username, password);
+        userMap.put(username, user);
+        System.out.println("New user connected");
         UserHandler t = new UserHandler(s, dis, dos, username, this);
         onlineUsers.add(t);
         dos.writeUTF(username + " successfully logged in");
-    } else {
-      dos.writeUTF("the username " + username + " is taken");
+      } else {
+        dos.writeUTF("the username " + username + " is taken");
+      }
     }
-  }
 
-  private void retrievePassword() {
+    private void retrievePassword() {
 
-  }
+    }
 
     public static void main(String[] args) {
         //check for correct # of parameters

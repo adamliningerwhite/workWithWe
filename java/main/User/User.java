@@ -26,7 +26,7 @@ public class User {
             streamOut = new DataOutputStream(s.getOutputStream());
             streamIn = new DataInputStream(s.getInputStream());
             System.out.println("Connected to Server");
-            System.out.println("Type (1) to Create New User, (2) to Log In, or (3) to Retrieve Password");
+            System.out.println("Type (1) to Create New User, (2) to Log In");
             String option = console.nextLine();
             switch(option) {
               case "1":
@@ -35,18 +35,13 @@ public class User {
               case "2":
                 logIn();
                 break;
-              case "3":
-                retrievePassword();
-                break;
               default:
                 System.out.println("Incorrect input!");
                 break;
-
             }
             /* Recieve acknowledgement from server */
             String res = streamIn.readUTF();
             System.out.println(res);
-
             if(res.contains("successfully logged in")) {
 	            /* Loop to forward messages to server. Terminates when user types "logoff" */
 	            String fromUser = "";
@@ -58,17 +53,12 @@ public class User {
 	            while(!fromUser.equals("Logoff")) {
 	                try {
 	                    fromUser = console.nextLine();
-
-	                    /* Send message to server */
-	                    toServer = packageMessage(fromUser);
-	                    streamOut.writeUTF(toServer);
+	                    streamOut.writeUTF(fromUser);
 	                    streamOut.flush();
-
-
 	                    if (fromUser.equals("Logoff")) {
 	                    	handler.end();
-	                        fromServer = streamIn.readUTF();
-	                        System.out.println(fromServer);
+                        fromServer = streamIn.readUTF();
+                        System.out.println(fromServer);
 	                    }
 	                } catch(IOException ioe) {
 	                    System.out.println("Sending error: " + ioe.getMessage());
@@ -80,6 +70,8 @@ public class User {
 	            streamOut.close();
 	            streamIn.close();
 	            s.close();
+            } else {
+              createUser();
             }
 
         }
@@ -88,13 +80,6 @@ public class User {
             System.out.println("Connection failed due to following reason");
             System.out.println(e);
         }
-    }
-
-
-    private String packageMessage(String message) throws Exception {
-        StringBuilder acc = new StringBuilder();
-        acc.append(message);
-        return acc.toString();
     }
 
     private void newUser() throws Exception {
