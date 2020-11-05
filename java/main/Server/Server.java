@@ -22,6 +22,8 @@ public class Server {
     private String username;
     private String password;
     private Socket s = null;
+    
+    private EncryptHelper encryptHelper;
 
 
     public Server() throws Exception {
@@ -42,24 +44,47 @@ public class Server {
 
                 dis = new DataInputStream(s.getInputStream());
                 dos = new DataOutputStream(s.getOutputStream());
+                
+                //TODO: send certificate? or send a file with a path to the certificate? 
+                dos.writeUTF("../Server/ServerKeys/serverpublic.key");
+                dos.flush();
+                
 
                 String input = dis.readUTF();
+                //TODO: decrypt message
                 String[] parsed = input.split(",");
                 option = parsed[0];
                 username = parsed[1];
                 password = parsed[2];
-
+                
                 switch(option) {
                   case "1":
                     createNewUser();
-                    break;
+                    encryptHelper = new EncryptHelper(username);
+                	userMap.get(username).setEncHelper(encryptHelper);
+                    dos.writeUTF(exchangeSessionKey());
+                    dos.flush();
+                    //break;
                   case "2":
                     logIn();
-                    break;
+                    encryptHelper = userMap.get(username).getEncHelper();
+                    dos.writeUTF(exchangeSessionKey());
+                    dos.flush();
+                    //break;
                   default:
                     System.out.println("Incorrect input!");
                     break;
                 }
+                
+//                while(true) {
+//                	String noMac = dis.readUTF();
+//                    String msg = dis.readUTF();
+//                    
+//                    msg = encryptHelper.getDecodedMessage(msg, noMac);
+//                    
+//                    System.out.println(msg);
+//                }
+                
             } catch (Exception e) {
                 s.close();
                 e.printStackTrace();
@@ -98,6 +123,7 @@ public class Server {
 
     private void logIn() throws Exception{
       UserModel currentUser = userMap.get(username);
+      //TODO: encrypt messages (or the ones that can be i think just last one) 
       if(currentUser == null){
         dos.writeUTF("the username " + username + " does not exist");
       } else if (!currentUser.checkPassword(password)) {
@@ -105,6 +131,7 @@ public class Server {
       } else {
         dos.writeUTF("successfully logged in");
       }
+      dos.flush();
     }
 
     private void createNewUser() throws Exception{
@@ -114,14 +141,24 @@ public class Server {
         System.out.println("New user connected");
         UserHandler t = new UserHandler(s, dis, dos, username, this);
         onlineUsers.add(t);
+        //TODO: add public key to UserModel
+        //TODO: encrypt message
         dos.writeUTF(username + " successfully logged in");
       } else {
         dos.writeUTF("the username " + username + " is taken");
       }
+      dos.flush();
     }
 
     private void retrievePassword() {
 
+    }
+    
+    private String exchangeSessionKey() {
+    	encryptHelper = new EncryptHelper(username);
+    	userMap.get(username).setEncHelper(encryptHelper);
+    	//TODO: add session key to the UserModel
+    	return encryptHelper.getKeyTransportMsg();
     }
 
     public static void main(String[] args) {

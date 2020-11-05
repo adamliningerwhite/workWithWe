@@ -1,14 +1,18 @@
 import java.util.List;
 import java.util.ArrayList;
+import javax.crypto.SecretKey;
 
 public class UserModel {
 
     private String username;
     private String password;
     private List<String> friends;
-    private String sessionKey;
-    private String encKey;
-    private String macKey;
+    private SecretKey sessionKey;
+    private SecretKey encKey;
+    private SecretKey macKey;
+    private EncryptHelper encHelper;
+    
+   // private RSAPublicKey publicKey;
 
     public UserModel(String username, String password) {
         this.username = username;
@@ -52,27 +56,38 @@ public class UserModel {
         friends.remove(oldFriend);
     }
 
-    public String getSessionKey() {
+    public void setEncHelper(EncryptHelper encHelper) {
+    	this.encHelper = encHelper;
+    	this.sessionKey = encHelper.getSessionKey();
+    	this.macKey = encHelper.getMacKey();
+    	this.encKey = encHelper.getEncodingKey();
+    }
+    
+    public EncryptHelper getEncHelper() {
+    	return encHelper;
+    }
+    
+    public SecretKey getSessionKey() {
         return sessionKey;
     }
 
-    public void setSessionKey(String newSessionKey) {
+    public void setSessionKey(SecretKey newSessionKey) {
         this.sessionKey = newSessionKey;
     }
 
-    public String getEncKey() {
+    public SecretKey getEncKey() {
         return encKey;
     }
 
-    public void setEncKey(String newEncKey) {
+    public void setEncKey(SecretKey newEncKey) {
         this.encKey = newEncKey;
     }
 
-    public String getMacKey() {
+    public SecretKey getMacKey() {
         return macKey;
     }
 
-    public void setMacKey(String newMacKey){
+    public void setMacKey(SecretKey newMacKey){
         this.macKey = newMacKey;
     }
 

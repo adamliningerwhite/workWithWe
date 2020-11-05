@@ -1,6 +1,13 @@
 import java.io.*;
 import java.net.*;
+import java.security.*;
+import java.security.KeyFactory;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
+import java.security.PublicKey;
+import java.security.PrivateKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 
 public class User {
 
@@ -13,6 +20,9 @@ public class User {
     private Socket s;
     private DataOutputStream streamOut;
     private DataInputStream streamIn;
+    private KeyGen keyGen;
+    private RSAPublicKey serverKey;
+    private RSAPrivateKey userKey;
 
     public User() throws Exception {
         createUser();
@@ -26,6 +36,13 @@ public class User {
             streamOut = new DataOutputStream(s.getOutputStream());
             streamIn = new DataInputStream(s.getInputStream());
             System.out.println("Connected to Server");
+            
+            //TODO: authenticate server here and save RSAPublicKey to file "serverKey"
+            //currently just reads a key from file and saves it as the public key for the server
+            String keyPath = streamIn.readUTF();
+            serverKey = readPublicKeyFromFile(keyPath);
+            
+            
             System.out.println("Type (1) to Create New User, (2) to Log In");
             String option = console.nextLine();
             switch(option) {
@@ -41,7 +58,12 @@ public class User {
             }
             /* Recieve acknowledgement from server */
             String res = streamIn.readUTF();
+            //TODO: decrypt message
             System.out.println(res);
+            
+            String transport = streamIn.readUTF();
+            keyGen.decryptKeyTransport(transport);
+            
             if(res.contains("successfully logged in")) {
 	            /* Loop to forward messages to server. Terminates when user types "logoff" */
 	            String fromUser = "";
@@ -53,11 +75,18 @@ public class User {
 	            while(!fromUser.equals("Logoff")) {
 	                try {
 	                    fromUser = console.nextLine();
-	                    streamOut.writeUTF(fromUser);
+	                    String msg = fromUser;
+	                    //create encoded message and encoded MAC message to send
+	                    streamOut.writeUTF(keyGen.createEncoded(msg));
+	                    msg = keyGen.createEncodedMessage(msg);
+	                    streamOut.writeUTF(msg);
 	                    streamOut.flush();
+	                    
 	                    if (fromUser.equals("Logoff")) {
 	                    	handler.end();
-                        fromServer = streamIn.readUTF();
+	                    	fromServer = streamIn.readUTF();
+	                    	//TODO: decrypt message
+                        
                         System.out.println(fromServer);
 	                    }
 	                } catch(IOException ioe) {
@@ -92,11 +121,15 @@ public class User {
       if(potentialPassword.equals(repeatedPassword)){
         password = potentialPassword;
         System.out.println("User successfully created!");
+        // creates new public and private keys, creates keyGen to encrypt and decrypt
+        keyGen = new KeyGen(username, serverKey);
       } else {
         System.out.println("Passwords do not match!");
         newUser();
         return;
       }
+      
+      //TODO: package message (keep in mind password is not hashed currently) 
       streamOut.writeUTF("1," + username + "," + password);
       streamOut.flush();
     }
@@ -106,6 +139,11 @@ public class User {
       username = console.nextLine();
       System.out.print("Enter password: ");
       password = console.nextLine();
+      
+      // creates new public and private keys, creates keyGen to encrypt and decrypt
+      keyGen = new KeyGen(username, serverKey);
+      
+      //TODO: package message (without hashing password
       streamOut.writeUTF("2," + username + "," + password);
       streamOut.flush();
     }
@@ -114,6 +152,24 @@ public class User {
 
     }
 
+    private RSAPublicKey readPublicKeyFromFile(String filePath) {
+		RSAPublicKey key = null;
+		File publicKey = new File(filePath);
+
+		try (FileInputStream is = new FileInputStream(publicKey)) {
+			byte[] encodedPublicKey = new byte[(int) publicKey.length()];
+			is.read(encodedPublicKey);
+
+			KeyFactory kf = KeyFactory.getInstance("RSA");
+			X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedPublicKey);
+			key = (RSAPublicKey) kf.generatePublic(keySpec);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return key;
+	}
+    
     /**
      * args[0] ; username
      */
