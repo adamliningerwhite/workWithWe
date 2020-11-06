@@ -53,9 +53,11 @@ public class User {
             switch(option) {
               case "1":
                 newUser();
+                res = "correct";
                 break;
               case "2":
                 logIn();
+                res = "correct";
                 break;
               default:
                 System.out.println("Incorrect input!");
