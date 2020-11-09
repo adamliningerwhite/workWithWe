@@ -17,6 +17,7 @@ public class UserModel {
     public UserModel(String username, String password) {
         this.username = username;
         this.password = password;
+        this.encHelper = null;
         this.friends = new ArrayList<String>();
     }
 
@@ -65,6 +66,10 @@ public class UserModel {
     
     public EncryptHelper getEncHelper() {
     	return encHelper;
+    }
+    
+    public boolean hasEncHelper() {
+    	return !(encHelper.equals(null));
     }
     
     public SecretKey getSessionKey() {

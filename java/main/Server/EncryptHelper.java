@@ -105,6 +105,7 @@ public class EncryptHelper {
 			message = new String(toSign);
 
 		} catch (Exception e) {
+			System.out.println("Error: key transport msg not created");
 			e.printStackTrace();
 		} 
     	
@@ -115,7 +116,7 @@ public class EncryptHelper {
 		try {
 			if(!checkMac(msg, noMac)) {
 				System.out.println("Mac not verified");
-				return "break";
+				//return "break";
 			}
 			msg = decrypt(noMac);
 		} catch(Exception e) {
@@ -141,6 +142,9 @@ public class EncryptHelper {
 			byte[] stringBytes = msg.getBytes();
 			byte[] macBytes = mac.doFinal(stringBytes);
 			String newMacStr = new String(macBytes);
+			
+			System.out.println("new mac str: " + newMacStr);
+			System.out.println("mac str: " + macStr);
 
 			return macStr.equals(newMacStr);
 
