@@ -29,25 +29,24 @@ public class UserHandler extends Thread {
          this.encHelper = userModel.getEncHelper();
          this.start();
      } 
-
+     
      @Override 
      public void run() {
         System.out.println("Thread started for: " + username);
         
         while (true)  { 
             try { 
-//            	String msg;
-            	String msg = dis.readUTF();
-//            	String input = dis.readUTF();
-//            	String[] lines = input.split("[\\r\\n]");
-//            	if(lines.length > 1) {
-//            		String noMac = lines[0]; 
-//                    msg = lines[1];
-//                    msg = encHelper.getDecodedMessage(msg, noMac);
-//                    System.out.println(msg);
-//            	} else {
-//            		msg = input;
-//            	}
+            	String msg;
+            	String input = dis.readUTF();
+            	String[] lines = input.split("[\\r\\n]");
+            	if(lines.length > 1) {
+            		String noMac = lines[0]; 
+                    msg = lines[1];
+                    msg = encHelper.getDecodedMessage(msg, noMac);
+                    System.out.println(msg);
+            	} else {
+            		msg = input;
+            	}
                 
                 if(msg.equals("Logoff")) {  
                     System.out.println(username + " is logging off...");

@@ -72,26 +72,27 @@ public class Server {
 				option = parsed[0];
 				username = parsed[1];
 				password = parsed[2];
-				System.out.println("Option: " + option);
+				//System.out.println("Option: " + option);
 				switch (option) {
 				case "1":
 					createNewUser();
-					// dos.writeUTF(exchangeSessionKey());
-					// dos.flush();
+					 dos.writeUTF(exchangeSessionKey());
+					 dos.flush();
 					first = true;
 					break;
 				case "2":
 					boolean res = logIn();
-					System.out.println(res);
+					//System.out.println(res);
 					if (res) {
-						// dos.writeUTF(exchangeSessionKey());
-						// dos.flush();
+						 dos.writeUTF(exchangeSessionKey());
+						 dos.flush();
 						first = true;
 					}
 					
 					break;
 				default:
 					System.out.println("Incorrect input!");
+					
 					break;
 				}
 			} catch (Exception e) {
@@ -141,14 +142,19 @@ public class Server {
 			dos.writeUTF("incorrect password");
 			return false;
 		} else {
-			if (currentUser.hasEncHelper()) {
-				encryptHelper = currentUser.getEncHelper();
-			} else {
+			System.out.println(username + " connected");
+			UserHandler t = new UserHandler(s, dis, dos, username, this, currentUser);
+			onlineUsers.add(t);
+//			if (currentUser.hasEncHelper()) {
+//				System.out.println("user has enc helper");
+//				encryptHelper = currentUser.getEncHelper();
+//			} else {
+				//System.out.println("user doesnt have enc helper");
 				encryptHelper = new EncryptHelper(username);
-				System.out.println(currentUser);
-				System.out.println(encryptHelper);
+				//System.out.println(currentUser);
+				//System.out.println(encryptHelper);
 				currentUser.setEncHelper(encryptHelper);
-			}
+//			}
 			dos.writeUTF("successfully logged in");
 		}
 		dos.flush();
@@ -179,7 +185,7 @@ public class Server {
 
 	private String exchangeSessionKey() {
 		String res = encryptHelper.getKeyTransportMsg();
-		System.out.println("Transport: " + res);
+		//System.out.println("Transport: " + res);
 		return res;
 	}
 

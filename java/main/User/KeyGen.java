@@ -191,10 +191,6 @@ public class KeyGen {
 			String signature = transport.substring(transport.indexOf("\r\n")+2);
 			transport = transport.substring(0,transport.indexOf("\r\n"));
 			String[] transportComponents = transport.split("\\n");
-
-			for(int i = 0; i < transportComponents.length; i++) {
-				System.out.println(transportComponents[i]);
-			}
 			
 			if (transportComponents[0].equals(username)) {
 				Date messageTime = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").parse(transportComponents[1]);
@@ -224,7 +220,7 @@ public class KeyGen {
 					return "Received Secret Key";
 
 				} else {
-					return "done";
+					return "Secret Key not recieved";
 				}
 			}
 		} catch (Exception e) {

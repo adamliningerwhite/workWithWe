@@ -78,6 +78,8 @@ public class UserModel {
 
     public void setSessionKey(SecretKey newSessionKey) {
         this.sessionKey = newSessionKey;
+        setEncKey(newSessionKey);
+        setMacKey(newSessionKey);
     }
 
     public SecretKey getEncKey() {
