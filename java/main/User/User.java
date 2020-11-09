@@ -97,7 +97,7 @@ public class User {
 	                    	handler.end();
 	                    	fromServer = streamIn.readUTF();
 	                    	//TODO: decrypt message
-                        
+
 	                    	System.out.println(fromServer);
 
 	                    }
@@ -140,8 +140,8 @@ public class User {
         newUser();
         return;
       }
-      
-      //TODO: package message (keep in mind password is not hashed currently) 
+
+      //TODO: package message (keep in mind password is not hashed currently)
       String msg = "1," + username + "," + password;
       msg = keyGen.getInitialEncode(msg);
       streamOut.writeUTF(msg);
@@ -158,7 +158,7 @@ public class User {
       keyGen = new KeyGen(username, serverKey);
 
       //TODO: package message (without hashing password
-      String msg = "1," + username + "," + password;
+      String msg = "2," + username + "," + password;
       msg = keyGen.getInitialEncode(msg);
       streamOut.writeUTF(msg);
       streamOut.flush();

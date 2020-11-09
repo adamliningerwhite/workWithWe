@@ -15,7 +15,7 @@ public class Server {
 
 	public static Base64.Encoder encoder = Base64.getEncoder();
 	public static Base64.Decoder decoder = Base64.getDecoder();
-	
+
     private static final int USER_LISTEN_PORT = 4232;
     private static final int MESSAGE_LISTEN_PORT = 4771;
 
@@ -64,7 +64,7 @@ public class Server {
 
                 String input = dis.readUTF();
                 input = getInitialDecrypt(input);
-             
+
                 String[] parsed = input.split(",");
                 option = parsed[0];
                 username = parsed[1];
@@ -77,9 +77,12 @@ public class Server {
                     dos.flush();
                     break;
                   case "2":
-                    logIn();
-                    dos.writeUTF(exchangeSessionKey());
-                    dos.flush();
+                    boolean res = logIn();
+										System.out.println(res);
+										if(res) {
+											dos.writeUTF(exchangeSessionKey());
+	                    dos.flush();
+										}
                     break;
                   default:
                     System.out.println("Incorrect input!");
@@ -124,15 +127,6 @@ public class Server {
     private boolean logIn() throws Exception{
       UserModel currentUser = userMap.get(username);
 
-      if(currentUser.hasEncHelper()) {
-    	  encryptHelper = currentUser.getEncHelper();
-      } else {
-    	  encryptHelper = new EncryptHelper(username);
-          System.out.println(currentUser);
-          System.out.println(encryptHelper);
-          currentUser.setEncHelper(encryptHelper); 
-      } 
-
       if(currentUser == null){
         dos.writeUTF("the username " + username + " does not exist");
         return false;
@@ -140,6 +134,14 @@ public class Server {
         dos.writeUTF("incorrect password");
         return false;
       } else {
+				if(currentUser.hasEncHelper()) {
+	    	  encryptHelper = currentUser.getEncHelper();
+	      } else {
+	    	  encryptHelper = new EncryptHelper(username);
+	          System.out.println(currentUser);
+	          System.out.println(encryptHelper);
+	          currentUser.setEncHelper(encryptHelper);
+	      }
         dos.writeUTF("successfully logged in");
       }
       dos.flush();
@@ -171,7 +173,7 @@ public class Server {
     private String exchangeSessionKey() {
     	return encryptHelper.getKeyTransportMsg();
     }
-    
+
     public String getInitialDecrypt(String msg) {
 		try {
 			serverKey = readPrivateKeyFromFile("ServerKeys/serverprivate.key");
@@ -184,7 +186,7 @@ public class Server {
 		}
 		return msg;
 	}
-    
+
     private static RSAPrivateKey readPrivateKeyFromFile(String filePath) throws Exception {
 		RSAPrivateKey key = null;
 
