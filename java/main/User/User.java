@@ -65,9 +65,9 @@ public class User {
                 break;
             }
             /* Recieve acknowledgement from server */
-            //if(res != "incorrect") {
+            if(res != "incorrect") {
               res = streamIn.readUTF();
-            //}
+            }
 
             System.out.println(res);
 
