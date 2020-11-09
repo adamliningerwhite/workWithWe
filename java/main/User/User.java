@@ -86,9 +86,10 @@ public class User {
 	                try {
 	                    fromUser = console.nextLine();
 	                    String msg = fromUser;
-	                    //create encoded message and encoded MAC message to send
-	                    streamOut.writeUTF(keyGen.createEncoded(msg));
+	                    String noMac = keyGen.createEncoded(msg);
 	                    msg = keyGen.createEncodedMessage(msg);
+	                    msg = noMac + '\n' + msg;
+	                    System.out.println(msg);
 	                    streamOut.writeUTF(msg);
 	                    streamOut.flush();
 
@@ -96,8 +97,9 @@ public class User {
 	                    	handler.end();
 	                    	fromServer = streamIn.readUTF();
 	                    	//TODO: decrypt message
+                        
+	                    	System.out.println(fromServer);
 
-                        System.out.println(fromServer);
 	                    }
 	                } catch(IOException ioe) {
 	                    System.out.println("Sending error: " + ioe.getMessage());
@@ -138,9 +140,11 @@ public class User {
         newUser();
         return;
       }
-
-      //TODO: package message (keep in mind password is not hashed currently)
-      streamOut.writeUTF("1," + username + "," + password);
+      
+      //TODO: package message (keep in mind password is not hashed currently) 
+      String msg = "1," + username + "," + password;
+      msg = keyGen.getInitialEncode(msg);
+      streamOut.writeUTF(msg);
       streamOut.flush();
     }
 
@@ -154,7 +158,9 @@ public class User {
       keyGen = new KeyGen(username, serverKey);
 
       //TODO: package message (without hashing password
-      streamOut.writeUTF("2," + username + "," + password);
+      String msg = "1," + username + "," + password;
+      msg = keyGen.getInitialEncode(msg);
+      streamOut.writeUTF(msg);
       streamOut.flush();
     }
 

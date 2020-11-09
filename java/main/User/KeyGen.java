@@ -45,6 +45,7 @@ public class KeyGen {
 	private String username;
 	
 	public KeyGen(String username, RSAPublicKey serverKey) {
+	//public KeyGen(String username) {
 		this.username = username;
 		this.serverKey = serverKey;
 		try {
@@ -105,6 +106,24 @@ public class KeyGen {
 		}
 		
 		return encodingKey;
+	}
+	
+	public String getInitialEncode(String msg) {
+		try {
+			SecureRandom random = new SecureRandom();
+			byte[] msgBytes = msg.getBytes();
+			
+			Cipher cipher = Cipher.getInstance("RSA");
+			cipher.init(Cipher.ENCRYPT_MODE, serverKey, random);
+			byte[] cipherText = cipher.doFinal(msgBytes);
+			
+			msg = encoder.encodeToString(cipherText);
+		} catch(Exception e) {
+			System.out.println("Error: unable to create password/username encryption");
+			e.printStackTrace();
+		}
+		
+		return msg;
 	}
 	
 	public String createEncoded(String msg) {
@@ -262,7 +281,8 @@ public class KeyGen {
 	
 	public static void main(String[] args) {
 		//KeyGen serverGen = new KeyGen("server");
-		//KeyGen keyGen = new KeyGen("test");
+		
+		//KeyGen keyGen = new KeyGen("jack");
 		
 		//RSAPublicKey publicServer = readPublicKeyFromFile("UserKeys/serverpublic.key");
 		//SecretKey encoded = getEncodeKey();

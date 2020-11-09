@@ -1,10 +1,21 @@
 import java.io.*;
 import java.text.*;
 import java.util.*;
+
+import javax.crypto.Cipher;
+
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyFactory;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 public class Server {
 
+	public static Base64.Encoder encoder = Base64.getEncoder();
+	public static Base64.Decoder decoder = Base64.getDecoder();
+	
     private static final int USER_LISTEN_PORT = 4232;
     private static final int MESSAGE_LISTEN_PORT = 4771;
 
@@ -24,6 +35,7 @@ public class Server {
     private Socket s = null;
 
     private EncryptHelper encryptHelper;
+    private RSAPrivateKey serverKey;
 
 
     public Server() throws Exception {
@@ -51,7 +63,8 @@ public class Server {
 
 
                 String input = dis.readUTF();
-                //TODO: decrypt message
+                input = getInitialDecrypt(input);
+             
                 String[] parsed = input.split(",");
                 option = parsed[0];
                 username = parsed[1];
@@ -60,33 +73,18 @@ public class Server {
                 switch(option) {
                   case "1":
                     createNewUser();
-                    encryptHelper = new EncryptHelper(username);
-                	userMap.get(username).setEncHelper(encryptHelper);
                     dos.writeUTF(exchangeSessionKey());
                     dos.flush();
-                    //break;
+                    break;
                   case "2":
-                    boolean res = logIn();
-                    if(res){
-                      encryptHelper = userMap.get(username).getEncHelper();
-                      dos.writeUTF(exchangeSessionKey());
-                    }
+                    logIn();
+                    dos.writeUTF(exchangeSessionKey());
                     dos.flush();
                     break;
                   default:
                     System.out.println("Incorrect input!");
                     break;
                 }
-
-//                while(true) {
-//                	String noMac = dis.readUTF();
-//                    String msg = dis.readUTF();
-//
-//                    msg = encryptHelper.getDecodedMessage(msg, noMac);
-//
-//                    System.out.println(msg);
-//                }
-
             } catch (Exception e) {
                 s.close();
                 e.printStackTrace();
@@ -125,7 +123,16 @@ public class Server {
 
     private boolean logIn() throws Exception{
       UserModel currentUser = userMap.get(username);
-      //TODO: encrypt messages (or the ones that can be i think just last one)
+
+      if(currentUser.hasEncHelper()) {
+    	  encryptHelper = currentUser.getEncHelper();
+      } else {
+    	  encryptHelper = new EncryptHelper(username);
+          System.out.println(currentUser);
+          System.out.println(encryptHelper);
+          currentUser.setEncHelper(encryptHelper); 
+      } 
+
       if(currentUser == null){
         dos.writeUTF("the username " + username + " does not exist");
         return false;
@@ -142,9 +149,11 @@ public class Server {
     private void createNewUser() throws Exception{
       if(!usernames.contains(username)) {
         UserModel user = new UserModel(username, password);
+        encryptHelper = new EncryptHelper(username);
+    	user.setEncHelper(encryptHelper);
         userMap.put(username, user);
         System.out.println("New user connected");
-        UserHandler t = new UserHandler(s, dis, dos, username, this);
+        UserHandler t = new UserHandler(s, dis, dos, username, this, user);
         onlineUsers.add(t);
         //TODO: add public key to UserModel
         //TODO: encrypt message
@@ -160,11 +169,32 @@ public class Server {
     }
 
     private String exchangeSessionKey() {
-    	encryptHelper = new EncryptHelper(username);
-    	userMap.get(username).setEncHelper(encryptHelper);
-    	//TODO: add session key to the UserModel
     	return encryptHelper.getKeyTransportMsg();
     }
+    
+    public String getInitialDecrypt(String msg) {
+		try {
+			serverKey = readPrivateKeyFromFile("ServerKeys/serverprivate.key");
+			Cipher cipher = Cipher.getInstance("RSA");
+			cipher.init(Cipher.DECRYPT_MODE, serverKey);
+			msg = new String(cipher.doFinal(decoder.decode(msg)), "UTF-8");
+		} catch(Exception e) {
+			System.out.println("Error: unable to decrypt username/password string");
+			e.printStackTrace();
+		}
+		return msg;
+	}
+    
+    private static RSAPrivateKey readPrivateKeyFromFile(String filePath) throws Exception {
+		RSAPrivateKey key = null;
+
+		byte[] encodedPrivateKey = Files.readAllBytes(Paths.get(filePath));
+		KeyFactory kf = KeyFactory.getInstance("RSA");
+		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
+		key = (RSAPrivateKey) kf.generatePrivate(keySpec);
+
+		return key;
+	}
 
     public static void main(String[] args) {
         //check for correct # of parameters
