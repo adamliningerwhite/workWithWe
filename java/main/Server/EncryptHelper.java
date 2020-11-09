@@ -47,7 +47,7 @@ public class EncryptHelper {
 			userKey = readPublicKeyFromFile(keyPath);
 			serverKey = readPrivateKeyFromFile("ServerKeys/serverprivate.key");
 			
-			keyTransportMsg = keyTransport();
+			
 		} catch(Exception e) {
 			System.out.println("EncryptHelper not created");
 			e.printStackTrace();
@@ -56,6 +56,7 @@ public class EncryptHelper {
 	}
 	
 	public String getKeyTransportMsg() {
+		keyTransportMsg = keyTransport();
 		return keyTransportMsg;
 	}
 	

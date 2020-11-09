@@ -73,9 +73,9 @@ public class User {
 
 
             if(res.contains("successfully logged in")) {
-              String transport = streamIn.readUTF();
-              System.out.println("Transport " + transport);
-              keyGen.decryptKeyTransport(transport);
+//              String transport = streamIn.readUTF();
+//              System.out.println("Transport " + transport);
+//              keyGen.decryptKeyTransport(transport);
 	            /* Loop to forward messages to server. Terminates when user types "logoff" */
 	            String fromUser = "";
 	            String toServer = "";
@@ -86,12 +86,13 @@ public class User {
 	            while(!fromUser.equals("Logoff")) {
 	                try {
 	                    fromUser = console.nextLine();
-	                    String msg = fromUser;
-	                    String noMac = keyGen.createEncoded(msg);
-	                    msg = keyGen.createEncodedMessage(msg);
-	                    msg = noMac + '\n' + msg;
-	                    System.out.println(msg);
-	                    streamOut.writeUTF(msg);
+	                    streamOut.writeUTF(fromUser);
+//	                    String msg = fromUser;
+//	                    String noMac = keyGen.createEncoded(msg);
+//	                    msg = keyGen.createEncodedMessage(msg);
+//	                    msg = noMac + '\n' + msg;
+//	                    System.out.println(msg);
+//	                    streamOut.writeUTF(msg);
 	                    streamOut.flush();
 
 	                    if (fromUser.equals("Logoff")) {
