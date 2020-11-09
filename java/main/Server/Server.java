@@ -36,6 +36,7 @@ public class Server {
 
     private EncryptHelper encryptHelper;
     private RSAPrivateKey serverKey;
+		private boolean first = true;
 
 
     public Server() throws Exception {
@@ -58,8 +59,13 @@ public class Server {
                 dos = new DataOutputStream(s.getOutputStream());
 
                 //TODO: send certificate? or send a file with a path to the certificate?
-                dos.writeUTF("../Server/ServerKeys/serverpublic.key");
-                dos.flush();
+
+								if(first) {
+									dos.writeUTF("../Server/ServerKeys/serverpublic.key");
+	                dos.flush();
+									first = false;
+								}
+
 
 
                 String input = dis.readUTF();
@@ -75,6 +81,7 @@ public class Server {
                     createNewUser();
                     dos.writeUTF(exchangeSessionKey());
                     dos.flush();
+										first = true;
                     break;
                   case "2":
                     boolean res = logIn();
@@ -83,6 +90,7 @@ public class Server {
 											dos.writeUTF(exchangeSessionKey());
 	                    dos.flush();
 										}
+										first = true;
                     break;
                   default:
                     System.out.println("Incorrect input!");
@@ -171,7 +179,9 @@ public class Server {
     }
 
     private String exchangeSessionKey() {
-    	return encryptHelper.getKeyTransportMsg();
+    	String res = encryptHelper.getKeyTransportMsg();
+			System.out.println("Transport: " + res);
+			return res;
     }
 
     public String getInitialDecrypt(String msg) {

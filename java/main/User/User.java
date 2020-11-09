@@ -65,15 +65,16 @@ public class User {
                 break;
             }
             /* Recieve acknowledgement from server */
-            if(res != "incorrect") {
+            //if(res != "incorrect") {
               res = streamIn.readUTF();
-            }
+            //}
 
             System.out.println(res);
 
 
             if(res.contains("successfully logged in")) {
               String transport = streamIn.readUTF();
+              System.out.println("Transport " + transport);
               keyGen.decryptKeyTransport(transport);
 	            /* Loop to forward messages to server. Terminates when user types "logoff" */
 	            String fromUser = "";

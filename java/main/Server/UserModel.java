@@ -11,7 +11,7 @@ public class UserModel {
     private SecretKey encKey;
     private SecretKey macKey;
     private EncryptHelper encHelper;
-    
+
    // private RSAPublicKey publicKey;
 
     public UserModel(String username, String password) {
@@ -63,15 +63,15 @@ public class UserModel {
     	this.macKey = encHelper.getMacKey();
     	this.encKey = encHelper.getEncodingKey();
     }
-    
+
     public EncryptHelper getEncHelper() {
     	return encHelper;
     }
-    
+
     public boolean hasEncHelper() {
-    	return !(encHelper.equals(null));
+    	return !(encHelper == null);
     }
-    
+
     public SecretKey getSessionKey() {
         return sessionKey;
     }
