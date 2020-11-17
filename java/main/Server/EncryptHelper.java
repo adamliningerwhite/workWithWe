@@ -38,15 +38,13 @@ public class EncryptHelper {
 	private RSAPrivateKey serverKey;
 	
 	private String username;
+	private String password;
+	private String loginType;
 	private String keyTransportMsg;
 	
-	public EncryptHelper(String username) {
+	public EncryptHelper() {
 		try {
-			this.username = username;
-			String keyPath = "../User/UserKeys/" + username + "public.key";
-			userKey = readPublicKeyFromFile(keyPath);
 			serverKey = readPrivateKeyFromFile("ServerKeys/serverprivate.key");
-			
 			
 		} catch(Exception e) {
 			System.out.println("EncryptHelper not created");
@@ -55,63 +53,106 @@ public class EncryptHelper {
 		
 	}
 	
-	public String getKeyTransportMsg() {
-		keyTransportMsg = keyTransport();
-		return keyTransportMsg;
+	public void setUsername(String username) {
+		try {
+			this.username = username;
+			String keyPath = "../User/UserKeys/" + username + "public.key";
+			userKey = readPublicKeyFromFile(keyPath);
+			
+		} catch(Exception e) {
+			System.out.println("Username not set");
+			e.printStackTrace();
+		}
 	}
 	
-	public String keyTransport() {
-    	String message = null;
+	public String getUsername() {
+		return username;
+	}
+	
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
+	public String getPassword() {
+		return password;
+	}
+	
+	public void setLoginType(String loginType) {
+		this.loginType = loginType;
+	}
+	
+	public String getLoginType() {
+		return loginType;
+	}
+	
+	public String decryptKeyTransport(String transport) {
     	try {
-			// generate new session key to be sent to Bob
-			KeyGenerator keyGen;
-			keyGen = KeyGenerator.getInstance("AES");
-			SecureRandom random = new SecureRandom();
-			keyGen.init(random);
-			sessionKey = keyGen.generateKey();
+			String signature = transport.substring(transport.indexOf("\r\n")+2);
+			transport = transport.substring(0,transport.indexOf("\r\n"));
+			String[] transportComponents = transport.split("\\n");
 			
-			// create string then byte array of message to be encoded
-			String encodedSessionKey = encoder.encodeToString(sessionKey.getEncoded());
-	        
-			byte[] s = decoder.decode(hashFunction(encodedSessionKey, "enc"));
-			byte[] encKey = Arrays.copyOfRange(s, 0,32);
-			SecretKeySpec macSks = new SecretKeySpec(decoder.decode(hashFunction(encodedSessionKey, "mac")), "AES");
-			SecretKeySpec encSks = new SecretKeySpec(encKey, "AES");
-			macKey = macSks;
-			encodingKey = encSks;
-			
-			String msg = "Server" + "\n" + encodedSessionKey;
-			byte[] toEncode = msg.getBytes();
-			
-			// create cipher and encode message with Alice identifier and session key
-			Cipher cipher = Cipher.getInstance("RSA");
-			cipher.init(Cipher.ENCRYPT_MODE, userKey, random);
-			byte[] cipherText = cipher.doFinal(toEncode);
-			
-			// create string then byte array of message to be signed
-			String cipherString = encoder.encodeToString(cipherText);
-			String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date(System.currentTimeMillis()));
-			String msg2 = username + "\n" + timeStamp + "\n" + cipherString;
-			byte[] toSign = msg2.getBytes();
-			
-			// create signature with SHA256 and RSA then sign message
-			Signature sign = Signature.getInstance("SHA256withRSA");
-			sign.initSign(serverKey);
-			sign.update(toSign);
-			String signature = encoder.encodeToString(sign.sign());
+			if (transportComponents[0].equals("Server")) {
+				Date messageTime = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").parse(transportComponents[1]);
+				Date currentTime = new Date(System.currentTimeMillis());
+				boolean isRecent = (((currentTime.getTime() - messageTime.getTime()) / (1000 * 60)) % 60) < 2;
 
-			toSign = (msg2 + "\r\n" + signature).getBytes();
-			
-			// update message to new string 
-			message = new String(toSign);
+				if (isRecent) {
+					// create cipher and encode message with Alice identifier and session key
+					Cipher cipher = Cipher.getInstance("RSA");
+					cipher.init(Cipher.DECRYPT_MODE, serverKey);
+					String decodedSessionKey = new String(cipher.doFinal(decoder.decode(transportComponents[2])),
+							"UTF-8");
+					String[] splitSessionKey = decodedSessionKey.split("\\n");
+					String loginString = splitSessionKey[0];
+					String[] login = loginString.split(",");
+					setLoginType(login[0]);
+					setUsername(login[1]);
+					setPassword(login[2]);
+					
+					if(checkSignature(transport, signature)) {
+					
+						String sessionKeyString = splitSessionKey[1];
+						
+						byte[] decodedKey = decoder.decode(sessionKeyString);
+						SecretKeySpec sks = new SecretKeySpec(decodedKey, "AES");
+						sessionKey = sks;
+		
+						byte[] s = decoder.decode(hashFunction(sessionKeyString, "enc"));
+						byte[] decKey = Arrays.copyOfRange(s, 0,32);
+						SecretKeySpec macSks = new SecretKeySpec(decoder.decode(hashFunction(sessionKeyString, "mac")), "AES");
+						SecretKeySpec decSks = new SecretKeySpec(decKey, "AES");
+						macKey = macSks;
+						encodingKey = decSks;
+		
+						return "Received Secret Key";
+					} else {
+						System.out.println("Signature not verified");
+					}
 
+				} else {
+					System.out.println("Key Transport not recent");
+				}
+			} else {
+				System.out.println("Key Transport not for server");
+			}
 		} catch (Exception e) {
-			System.out.println("Error: key transport msg not created");
 			e.printStackTrace();
-		} 
-    	
-    	return message;
+		}
+
+    	return "Secret Key not recieved";
     }
+	
+	private boolean checkSignature(String signedObj, String signature) {
+		try {
+			Signature sign = Signature.getInstance("SHA256withRSA");
+			sign.initVerify(userKey);
+			sign.update(signedObj.getBytes());
+			return sign.verify(decoder.decode(signature));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
 	
 	public String getDecodedMessage(String msg, String noMac) {
 		try {
@@ -144,8 +185,8 @@ public class EncryptHelper {
 			byte[] macBytes = mac.doFinal(stringBytes);
 			String newMacStr = new String(macBytes);
 			
-			System.out.println("new mac str: " + newMacStr);
-			System.out.println("mac str: " + macStr);
+			//System.out.println("new mac str: " + newMacStr);
+			//System.out.println("mac str: " + macStr);
 
 			return macStr.equals(newMacStr);
 
@@ -223,16 +264,17 @@ public class EncryptHelper {
 	public SecretKey getEncodingKey() {
 		return encodingKey;
 	}
+	
 	public static void main(String[] args) {
-		try {
-			EncryptHelper eHelper = new EncryptHelper("test");
-			//System.out.println(userKey);
-			//System.out.println(serverKey);
-			//System.out.println(sessionKey);
-			//System.out.println(keyTransportMsg);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+//		try {
+//			//EncryptHelper eHelper = new EncryptHelper("test");
+//			//System.out.println(userKey);
+//			//System.out.println(serverKey);
+//			//System.out.println(sessionKey);
+//			//System.out.println(keyTransportMsg);
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//		}
 		
 	}
 }

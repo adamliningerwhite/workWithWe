@@ -24,6 +24,7 @@ public class User {
     private RSAPublicKey serverKey;
     private RSAPrivateKey userKey;
     String res;
+    String keyTransportMsg;
     boolean first = true;
 
     public User() throws Exception {
@@ -73,12 +74,6 @@ public class User {
 
 
             if(res.contains("successfully logged in")) {
-				String transport = streamIn.readUTF();
-				//keyGen.decryptKeyTransport(transport);
-				//System.out.println("Transport " + transport);
-				String msg1 = keyGen.decryptKeyTransport(transport);
-				System.out.println(msg1);
-				
 	            /* Loop to forward messages to server. Terminates when user types "logoff" */
 	            String fromUser = "";
 	            String toServer = "";
@@ -89,7 +84,6 @@ public class User {
 	            while(!fromUser.equals("Logoff")) {
 	                try {
 	                    fromUser = console.nextLine();
-	                    streamOut.writeUTF(fromUser);
 	                    String msg = fromUser;
 	                    String noMac = keyGen.createEncoded(msg);
 	                    msg = keyGen.createEncodedMessage(msg);
@@ -101,8 +95,6 @@ public class User {
 	                    if (fromUser.equals("Logoff")) {
 	                    	handler.end();
 	                    	fromServer = streamIn.readUTF();
-	                    	//TODO: decrypt message
-
 	                    	System.out.println(fromServer);
 
 	                    }
@@ -139,17 +131,18 @@ public class User {
         password = potentialPassword;
         System.out.println("User successfully created!");
         // creates new public and private keys, creates keyGen to encrypt and decrypt
-        keyGen = new KeyGen(username, serverKey);
+        keyGen = new KeyGen(username, potentialPassword, "1", serverKey);
+        
       } else {
         System.out.println("Passwords do not match!");
         newUser();
         return;
       }
 
-      //TODO: package message (keep in mind password is not hashed currently)
-      String msg = "1," + username + "," + password;
-      msg = keyGen.getInitialEncode(msg);
-      streamOut.writeUTF(msg);
+      // key transport message includes login message as well
+      keyTransportMsg = keyGen.getKeyTransportMsg();
+      //System.out.println(keyTransportMsg);
+      streamOut.writeUTF(keyTransportMsg);
       streamOut.flush();
     }
 
@@ -160,12 +153,12 @@ public class User {
       password = console.nextLine();
 
       // creates new public and private keys, creates keyGen to encrypt and decrypt
-      keyGen = new KeyGen(username, serverKey);
+      keyGen = new KeyGen(username, password, "2", serverKey);
 
-      //TODO: package message (without hashing password
-      String msg = "2," + username + "," + password;
-      msg = keyGen.getInitialEncode(msg);
-      streamOut.writeUTF(msg);
+      // key transport message includes login message as well
+      keyTransportMsg = keyGen.getKeyTransportMsg();
+      //System.out.println(keyTransportMsg);
+      streamOut.writeUTF(keyTransportMsg);
       streamOut.flush();
     }
 

@@ -25,6 +25,7 @@ import java.util.Base64;
 import java.util.Date;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -43,10 +44,15 @@ public class KeyGen {
 	private RSAPublicKey serverKey;
 	
 	private String username;
+	private String password;
+	private String userLoginType;
+	private String keyTransportMsg;
 	
-	public KeyGen(String username, RSAPublicKey serverKey) {
+	public KeyGen(String username, String password, String userLoginType, RSAPublicKey serverKey) {
 	//public KeyGen(String username) {
 		this.username = username;
+		this.password = password;
+		this.userLoginType = userLoginType;
 		this.serverKey = serverKey;
 		try {
 			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
@@ -60,6 +66,7 @@ public class KeyGen {
 		}
 	
 		this.userKey = readPrivateKeyFromFile("UserKeys/" + username + "private.key");
+		//System.out.println(getKeyTransportMsg());
 		
 	}
 	
@@ -78,53 +85,93 @@ public class KeyGen {
 		fos.close();
 	}
 	
-	public void setSessionKey(SecretKey key) {
-		sessionKey = key;
+	public String getKeyTransportMsg() {
+		keyTransportMsg = keyTransport();
+		return keyTransportMsg;
 	}
 	
-	private SecretKey getMacKey() {
-		try {
-			String encodedSessionKey = encoder.encodeToString(sessionKey.getEncoded());
-			SecretKeySpec macSks = new SecretKeySpec(decoder.decode(hashFunction(encodedSessionKey, "mac")), "AES");
-			macKey = macSks;	
-		} catch(NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		
-		return macKey;	
-	}
-	
-	private SecretKey getEncodeKey() {
-		try {
-			String encodedSessionKey = encoder.encodeToString(sessionKey.getEncoded());
-			byte[] s = decoder.decode(hashFunction(encodedSessionKey, "enc"));
-			byte[] encKey = Arrays.copyOfRange(s, 0, 32);
-			SecretKeySpec encSks = new SecretKeySpec(encKey, "AES");
-			encodingKey = encSks;
-		} catch(NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		
-		return encodingKey;
-	}
-	
-	public String getInitialEncode(String msg) {
-		try {
+	public String keyTransport() {
+    	String message = null;
+    	try {
+			// generate new session key to be sent to Bob
+			KeyGenerator keyGen;
+			keyGen = KeyGenerator.getInstance("AES");
 			SecureRandom random = new SecureRandom();
-			byte[] msgBytes = msg.getBytes();
+			keyGen.init(random);
+			sessionKey = keyGen.generateKey();
 			
+			// create string then byte array of message to be encoded
+			String encodedSessionKey = encoder.encodeToString(sessionKey.getEncoded());
+	        
+			byte[] s = decoder.decode(hashFunction(encodedSessionKey, "enc"));
+			byte[] encKey = Arrays.copyOfRange(s, 0,32);
+			SecretKeySpec macSks = new SecretKeySpec(decoder.decode(hashFunction(encodedSessionKey, "mac")), "AES");
+			SecretKeySpec encSks = new SecretKeySpec(encKey, "AES");
+			macKey = macSks;
+			encodingKey = encSks;
+			
+			String msg = userLoginType + "," + username + "," + password + "\n" + encodedSessionKey;
+			byte[] toEncode = msg.getBytes();
+			
+			// create cipher and encode message with Alice identifier and session key
 			Cipher cipher = Cipher.getInstance("RSA");
 			cipher.init(Cipher.ENCRYPT_MODE, serverKey, random);
-			byte[] cipherText = cipher.doFinal(msgBytes);
+			byte[] cipherText = cipher.doFinal(toEncode);
 			
-			msg = encoder.encodeToString(cipherText);
-		} catch(Exception e) {
-			System.out.println("Error: unable to create password/username encryption");
+			// create string then byte array of message to be signed
+			String cipherString = encoder.encodeToString(cipherText);
+			String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date(System.currentTimeMillis()));
+			String msg2 = "Server" + "\n" + timeStamp + "\n" + cipherString;
+			byte[] toSign = msg2.getBytes();
+			
+			// create signature with SHA256 and RSA then sign message
+			Signature sign = Signature.getInstance("SHA256withRSA");
+			sign.initSign(userKey);
+			sign.update(toSign);
+			String signature = encoder.encodeToString(sign.sign());
+
+			toSign = (msg2 + "\r\n" + signature).getBytes();
+			
+			// update message to new string 
+			message = new String(toSign);
+
+		} catch (Exception e) {
+			System.out.println("Error: key transport msg not created");
 			e.printStackTrace();
-		}
-		
-		return msg;
-	}
+		} 
+    	
+    	return message;
+    }
+	
+//	public void setSessionKey(SecretKey key) {
+//		sessionKey = key;
+//	}
+	
+//	private SecretKey getMacKey() {
+//		try {
+//			String encodedSessionKey = encoder.encodeToString(sessionKey.getEncoded());
+//			SecretKeySpec macSks = new SecretKeySpec(decoder.decode(hashFunction(encodedSessionKey, "mac")), "AES");
+//			macKey = macSks;	
+//		} catch(NoSuchAlgorithmException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		return macKey;	
+//	}
+	
+//	private SecretKey getEncodeKey() {
+//		try {
+//			String encodedSessionKey = encoder.encodeToString(sessionKey.getEncoded());
+//			byte[] s = decoder.decode(hashFunction(encodedSessionKey, "enc"));
+//			byte[] encKey = Arrays.copyOfRange(s, 0, 32);
+//			SecretKeySpec encSks = new SecretKeySpec(encKey, "AES");
+//			encodingKey = encSks;
+//		} catch(NoSuchAlgorithmException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		return encodingKey;
+//	}
 	
 	public String createEncoded(String msg) {
 		try {
@@ -186,62 +233,6 @@ public class KeyGen {
     	
     //}
     
-    public String decryptKeyTransport(String transport) {
-    	try {
-			String signature = transport.substring(transport.indexOf("\r\n")+2);
-			transport = transport.substring(0,transport.indexOf("\r\n"));
-			String[] transportComponents = transport.split("\\n");
-			
-			if (transportComponents[0].equals(username)) {
-				Date messageTime = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").parse(transportComponents[1]);
-				Date currentTime = new Date(System.currentTimeMillis());
-				boolean isRecent = (((currentTime.getTime() - messageTime.getTime()) / (1000 * 60)) % 60) < 2;
-
-				if (isRecent && checkSignature(transport, signature)) {
-					// create cipher and encode message with Alice identifier and session key
-					Cipher cipher = Cipher.getInstance("RSA");
-					cipher.init(Cipher.DECRYPT_MODE, userKey);
-					String decodedSessionKey = new String(cipher.doFinal(decoder.decode(transportComponents[2])),
-							"UTF-8");
-					String[] splitSessionKey = decodedSessionKey.split("\\n");
-					String sessionKeyString = splitSessionKey[1];
-					
-					byte[] decodedKey = decoder.decode(sessionKeyString);
-					SecretKeySpec sks = new SecretKeySpec(decodedKey, "AES");
-					sessionKey = sks;
-
-					byte[] s = decoder.decode(hashFunction(sessionKeyString, "enc"));
-					byte[] decKey = Arrays.copyOfRange(s, 0,32);
-					SecretKeySpec macSks = new SecretKeySpec(decoder.decode(hashFunction(sessionKeyString, "mac")), "AES");
-					SecretKeySpec decSks = new SecretKeySpec(decKey, "AES");
-					macKey = macSks;
-					encodingKey = decSks;
-
-					return "Received Secret Key";
-
-				} else {
-					return "Secret Key not recieved";
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return "";
-    }
-    
-    private boolean checkSignature(String signedObj, String signature) {
-		try {
-			Signature sign = Signature.getInstance("SHA256withRSA");
-			sign.initVerify(serverKey);
-			sign.update(signedObj.getBytes());
-			return sign.verify(decoder.decode(signature));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-    
 	private String hashFunction(String input, String concat) throws NoSuchAlgorithmException {
 		 // getInstance() method is called with algorithm SHA-512 
        MessageDigest md = MessageDigest.getInstance("SHA-512"); 
@@ -279,12 +270,30 @@ public class KeyGen {
 		return key;
 	}
 	
+//	private static RSAPublicKey readPublicKeyFromFile(String filePath) {
+//		RSAPublicKey key = null;
+//		File publicKey = new File(filePath);
+//
+//		try (FileInputStream is = new FileInputStream(publicKey)) {
+//			byte[] encodedPublicKey = new byte[(int) publicKey.length()];
+//			is.read(encodedPublicKey);
+//
+//			KeyFactory kf = KeyFactory.getInstance("RSA");
+//			X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedPublicKey);
+//			key = (RSAPublicKey) kf.generatePublic(keySpec);
+//
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		return key;
+//	}
+	
 	public static void main(String[] args) {
 		//KeyGen serverGen = new KeyGen("server");
+		//RSAPublicKey publicServer = readPublicKeyFromFile("../Server/ServerKeys/serverpublic.key");
+		//KeyGen keyGen = new KeyGen("jack", publicServer);
 		
-		//KeyGen keyGen = new KeyGen("jack");
-		
-		//RSAPublicKey publicServer = readPublicKeyFromFile("UserKeys/serverpublic.key");
+		//RSAPublicKey publicServer = readPublicKeyFromFile("../Server/ServerKeys/serverpublic.key");
 		//SecretKey encoded = getEncodeKey();
 		//SecretKey mac = getMacKey();
 	}

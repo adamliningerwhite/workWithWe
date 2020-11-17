@@ -65,27 +65,24 @@ public class Server {
 					first = false;
 				}
 
-				String input = dis.readUTF();
-				input = getInitialDecrypt(input);
+				String transport = dis.readUTF();
+				//System.out.println(transport);
+				encryptHelper = new EncryptHelper();
+				encryptHelper.decryptKeyTransport(transport);
+				
 
-				String[] parsed = input.split(",");
-				option = parsed[0];
-				username = parsed[1];
-				password = parsed[2];
-				//System.out.println("Option: " + option);
+				option = encryptHelper.getLoginType();
+				username = encryptHelper.getUsername();
+				password = encryptHelper.getPassword();
+
 				switch (option) {
 				case "1":
 					createNewUser();
-					 dos.writeUTF(exchangeSessionKey());
-					 dos.flush();
 					first = true;
 					break;
 				case "2":
 					boolean res = logIn();
-					//System.out.println(res);
 					if (res) {
-						 dos.writeUTF(exchangeSessionKey());
-						 dos.flush();
 						first = true;
 					}
 					
@@ -143,18 +140,9 @@ public class Server {
 			return false;
 		} else {
 			System.out.println(username + " connected");
+			currentUser.setEncHelper(encryptHelper);
 			UserHandler t = new UserHandler(s, dis, dos, username, this, currentUser);
 			onlineUsers.add(t);
-//			if (currentUser.hasEncHelper()) {
-//				System.out.println("user has enc helper");
-//				encryptHelper = currentUser.getEncHelper();
-//			} else {
-				//System.out.println("user doesnt have enc helper");
-				encryptHelper = new EncryptHelper(username);
-				//System.out.println(currentUser);
-				//System.out.println(encryptHelper);
-				currentUser.setEncHelper(encryptHelper);
-//			}
 			dos.writeUTF("successfully logged in");
 		}
 		dos.flush();
@@ -164,13 +152,12 @@ public class Server {
 	private void createNewUser() throws Exception {
 		if (!usernames.contains(username)) {
 			UserModel user = new UserModel(username, password);
-			encryptHelper = new EncryptHelper(username);
 			user.setEncHelper(encryptHelper);
 			userMap.put(username, user);
 			System.out.println("New user connected");
 			UserHandler t = new UserHandler(s, dis, dos, username, this, user);
 			onlineUsers.add(t);
-			// TODO: add public key to UserModel
+			
 			// TODO: encrypt message
 			dos.writeUTF(username + " successfully logged in");
 		} else {
@@ -181,36 +168,6 @@ public class Server {
 
 	private void retrievePassword() {
 
-	}
-
-	private String exchangeSessionKey() {
-		String res = encryptHelper.getKeyTransportMsg();
-		//System.out.println("Transport: " + res);
-		return res;
-	}
-
-	public String getInitialDecrypt(String msg) {
-		try {
-			serverKey = readPrivateKeyFromFile("ServerKeys/serverprivate.key");
-			Cipher cipher = Cipher.getInstance("RSA");
-			cipher.init(Cipher.DECRYPT_MODE, serverKey);
-			msg = new String(cipher.doFinal(decoder.decode(msg)), "UTF-8");
-		} catch (Exception e) {
-			System.out.println("Error: unable to decrypt username/password string");
-			e.printStackTrace();
-		}
-		return msg;
-	}
-
-	private static RSAPrivateKey readPrivateKeyFromFile(String filePath) throws Exception {
-		RSAPrivateKey key = null;
-
-		byte[] encodedPrivateKey = Files.readAllBytes(Paths.get(filePath));
-		KeyFactory kf = KeyFactory.getInstance("RSA");
-		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
-		key = (RSAPrivateKey) kf.generatePrivate(keySpec);
-
-		return key;
 	}
 
 	public static void main(String[] args) {
