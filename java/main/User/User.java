@@ -67,7 +67,21 @@ public class User {
             }
             /* Recieve acknowledgement from server */
             if(res != "incorrect") {
-              res = streamIn.readUTF();
+            	String input = streamIn.readUTF();
+            	String[] lines = input.split("[\\r\\n]");
+	          	
+	          	if(lines.length > 1) {
+	          		String noMac = lines[0]; 
+	                res = lines[1];
+	          		if(lines.length > 2) {
+	          			int num = noMac.length() + 1;
+	          			res = input.substring(num);
+	          		}
+	
+	                  res = keyGen.getDecodedMessage(res, noMac);
+	          	} else {
+	          		res = input;
+	          	}
             }
 
             System.out.println(res);
@@ -78,7 +92,7 @@ public class User {
 	            String fromUser = "";
 	            String toServer = "";
 	            String fromServer = "";
-	            ServerHandler handler = new ServerHandler(streamOut, streamIn);
+	            ServerHandler handler = new ServerHandler(streamOut, streamIn, keyGen);
 	            Thread.sleep(5);
 	            System.out.println("Type 'Logoff' to sign out");
 	            while(!fromUser.equals("Logoff")) {
@@ -95,8 +109,21 @@ public class User {
 	                    if (fromUser.equals("Logoff")) {
 	                    	handler.end();
 	                    	fromServer = streamIn.readUTF();
-	                    	System.out.println(fromServer);
-
+	                    	String[] lines = fromServer.split("[\\r\\n]");
+	        	          	
+	        	          	if(lines.length > 1) {
+	        	          		noMac = lines[0]; 
+	        	                msg = lines[1];
+	        	          		if(lines.length > 2) {
+	        	          			int num = noMac.length() + 1;
+	        	          			msg = fromServer.substring(num);
+	        	          		}
+	        	
+	        	                  msg = keyGen.getDecodedMessage(msg, noMac);
+	        	          	} else {
+	        	          		msg = fromServer;
+	        	          	}
+	                    	System.out.println(msg);
 	                    }
 	                } catch(IOException ioe) {
 	                    System.out.println("Sending error: " + ioe.getMessage());

@@ -39,9 +39,6 @@ public class UserHandler extends Thread {
             	String msg;
             	String input = dis.readUTF();
             	String[] lines = input.split("[\\r\\n]");
-            	//for(int i = 0; i < lines.length; i ++) {
-            	//	System.out.println("line" + i + ": " + lines[i]);
-            	//}
             	
             	if(lines.length > 1) {
             		String noMac = lines[0]; 
@@ -50,9 +47,7 @@ public class UserHandler extends Thread {
             			int num = noMac.length() + 1;
             			msg = input.substring(num);
             		}
-            		//System.out.println("lines.length = " + lines.length);
-                    //System.out.println("no mac: " + noMac);
-                    //System.out.println("w/ mac: " + msg);
+
                     msg = encHelper.getDecodedMessage(msg, noMac);
                     System.out.println(msg);
             	} else {
@@ -61,9 +56,13 @@ public class UserHandler extends Thread {
                 
                 if(msg.equals("Logoff")) {  
                     System.out.println(username + " is logging off...");
-                    msg = username + " successfully logged off";
                     server.removeUser(username);
-                    dos.writeUTF(msg);
+                    
+                    msg = username + " successfully logged off";
+        			String noMac = encHelper.createEncoded(msg);
+        			msg = encHelper.createEncodedMessage(msg);
+                    msg = noMac + '\n' + msg;
+        			dos.writeUTF(msg);
                     dos.flush();
                     s.close(); 
                     break; 
@@ -95,6 +94,10 @@ public class UserHandler extends Thread {
         		}
         	}
     	}
+    	
+		String noMac = encHelper.createEncoded(res);
+		res = encHelper.createEncodedMessage(res);
+        res = noMac + '\n' + res;
     	dos.writeUTF(res);
     	dos.flush();
     }

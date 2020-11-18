@@ -53,7 +53,8 @@ public class EncryptHelper {
 		
 	}
 	
-	public void setUsername(String username) {
+	/* methods to set and get username, password, and login type */
+	private void setUsername(String username) {
 		try {
 			this.username = username;
 			String keyPath = "../User/UserKeys/" + username + "public.key";
@@ -64,12 +65,12 @@ public class EncryptHelper {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public String getUsername() {
 		return username;
 	}
 	
-	public void setPassword(String password) {
+	private void setPassword(String password) {
 		this.password = password;
 	}
 	
@@ -77,7 +78,7 @@ public class EncryptHelper {
 		return password;
 	}
 	
-	public void setLoginType(String loginType) {
+	private void setLoginType(String loginType) {
 		this.loginType = loginType;
 	}
 	
@@ -85,6 +86,7 @@ public class EncryptHelper {
 		return loginType;
 	}
 	
+	/* methods to decrypt the key transport msg */
 	public String decryptKeyTransport(String transport) {
     	try {
 			String signature = transport.substring(transport.indexOf("\r\n")+2);
@@ -154,6 +156,20 @@ public class EncryptHelper {
 		return false;
 	}
 	
+	/* methods to get the session key, mac key, and encoding key */
+	public SecretKey getSessionKey() {
+		return sessionKey;
+	}
+	
+	public SecretKey getMacKey() {
+		return macKey;
+	}
+	
+	public SecretKey getEncodingKey() {
+		return encodingKey;
+	}
+	
+	/* methods to decrypt regular messages from users */
 	public String getDecodedMessage(String msg, String noMac) {
 		try {
 			if(!checkMac(msg, noMac)) {
@@ -169,7 +185,7 @@ public class EncryptHelper {
 		return msg;
 	}
 	
-	public String decrypt(String cipherText) throws IOException, GeneralSecurityException {
+	private String decrypt(String cipherText) throws IOException, GeneralSecurityException {
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	    IvParameterSpec ivspec = new IvParameterSpec(iv);
@@ -177,7 +193,7 @@ public class EncryptHelper {
 		return new String(cipher.doFinal(decoder.decode(cipherText)), "UTF-8");
 	}
 
-	public Boolean checkMac(String macStr, String msg) {
+	private Boolean checkMac(String macStr, String msg) {
 		try {
 			Mac mac = Mac.getInstance("HmacSHA256");
 			mac.init(macKey);
@@ -197,6 +213,64 @@ public class EncryptHelper {
 		return false;
 	}
 	
+	/* methods to encrypt message with and without mac under session key */
+	public String createEncoded(String msg) {
+		try {
+			msg = packageMessage(msg);
+			msg = encrypt(msg);
+		} catch(Exception e) {
+			System.out.println("Error: package could not be encoded");
+			e.printStackTrace();
+		}
+		
+		return msg;
+	}
+	
+	public String createEncodedMessage(String msg) {
+		try {
+			msg = packageMessage(msg);
+			msg = encrypt(msg);
+			msg = createMac(msg);
+		} catch(Exception e) {
+			System.out.println("Error: package could not be encoded with MAC");
+			e.printStackTrace();
+		}
+		
+		return msg;
+	}
+	
+	private String encrypt(String message) throws Exception {
+		
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	    IvParameterSpec ivspec = new IvParameterSpec(iv);
+		cipher.init(Cipher.ENCRYPT_MODE, encodingKey, ivspec);
+		byte[] encrypted = cipher.doFinal(message.getBytes());
+		String encodedString = encoder.encodeToString(encrypted);
+		
+		return encodedString;
+	}
+    
+    public String createMac(String message) throws Exception {
+    	String encrypted = "";
+    	
+		Mac mac = Mac.getInstance("HmacSHA256");
+		mac.init(macKey);
+		byte[] stringBytes = message.getBytes();
+    	byte[] macBytes = mac.doFinal(stringBytes);
+    	encrypted = new String(macBytes);
+
+    	return encrypted;
+    }
+    
+    private String packageMessage(String message) throws Exception {
+		StringBuilder acc = new StringBuilder();
+		acc.append(message);
+
+		return acc.toString();
+	}
+	
+    /* general methods including hash function, and reading keys from file */
 	private String hashFunction(String input, String concat) throws NoSuchAlgorithmException {
 		// getInstance() method is called with algorithm SHA-512 
 		MessageDigest md = MessageDigest.getInstance("SHA-512"); 
@@ -251,18 +325,6 @@ public class EncryptHelper {
 			e.printStackTrace();
 		}
 		return key;
-	}
-	
-	public SecretKey getSessionKey() {
-		return sessionKey;
-	}
-	
-	public SecretKey getMacKey() {
-		return macKey;
-	}
-	
-	public SecretKey getEncodingKey() {
-		return encodingKey;
 	}
 	
 	public static void main(String[] args) {

@@ -6,15 +6,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.Signature;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -70,7 +61,8 @@ public class KeyGen {
 		
 	}
 	
-	public void saveKeyPair(String name, KeyPair keyPair) throws IOException {
+	/* methods to save key pairs and create and get the key transport message */
+	private void saveKeyPair(String name, KeyPair keyPair) throws IOException {
 		PrivateKey privateKey = keyPair.getPrivate();
 		PublicKey publicKey = keyPair.getPublic();
 		
@@ -90,7 +82,7 @@ public class KeyGen {
 		return keyTransportMsg;
 	}
 	
-	public String keyTransport() {
+	private String keyTransport() {
     	String message = null;
     	try {
 			// generate new session key to be sent to Bob
@@ -173,6 +165,7 @@ public class KeyGen {
 //		return encodingKey;
 //	}
 	
+	/* methods to encrypt messages from user with and without mac */
 	public String createEncoded(String msg) {
 		try {
 			msg = packageMessage(msg);
@@ -229,10 +222,51 @@ public class KeyGen {
 		return acc.toString();
 	}
 	
-    //public String decryptEncodedMessage(String msg) {
-    	
-    //}
+    /* methods to decrypt message from server */ 
+    public String getDecodedMessage(String msg, String noMac) {
+		try {
+			if(!checkMac(msg, noMac)) {
+				System.out.println("Mac not verified");
+				//return "break";
+			}
+			msg = decrypt(noMac);
+		} catch(Exception e) {
+			System.out.println("Message not decoded");
+			e.printStackTrace();
+		}
+		
+		return msg;
+	}
+	
+	private String decrypt(String cipherText) throws IOException, GeneralSecurityException {
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	    IvParameterSpec ivspec = new IvParameterSpec(iv);
+		cipher.init(Cipher.DECRYPT_MODE, encodingKey, ivspec);
+		return new String(cipher.doFinal(decoder.decode(cipherText)), "UTF-8");
+	}
+
+	private Boolean checkMac(String macStr, String msg) {
+		try {
+			Mac mac = Mac.getInstance("HmacSHA256");
+			mac.init(macKey);
+			byte[] stringBytes = msg.getBytes();
+			byte[] macBytes = mac.doFinal(stringBytes);
+			String newMacStr = new String(macBytes);
+			
+			//System.out.println("new mac str: " + newMacStr);
+			//System.out.println("mac str: " + macStr);
+
+			return macStr.equals(newMacStr);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
     
+	/* general methods such as hash function and reading keys from file */
 	private String hashFunction(String input, String concat) throws NoSuchAlgorithmException {
 		 // getInstance() method is called with algorithm SHA-512 
        MessageDigest md = MessageDigest.getInstance("SHA-512"); 

@@ -9,12 +9,14 @@ public class ServerHandler extends Thread {
 	private Socket s;
 	private DataOutputStream streamOut;
 	private DataInputStream streamIn;
+	private KeyGen keyGen;
 	private boolean running = true;
 
 
-	public ServerHandler( DataOutputStream streamOut, DataInputStream streamIn) {
+	public ServerHandler( DataOutputStream streamOut, DataInputStream streamIn, KeyGen keyGen) {
 		this.streamOut = streamOut;
 		this.streamIn = streamIn;
+		this.keyGen = keyGen;
 		this.start();
 	}
 
@@ -26,8 +28,25 @@ public class ServerHandler extends Thread {
 			while(running) {
 				streamOut.writeUTF(onlineMessage);
 				streamOut.flush();
-				String res = streamIn.readUTF();
-				//System.out.println(res);
+				
+				String res;
+				String input = streamIn.readUTF();
+            	String[] lines = input.split("[\\r\\n]");
+	          	
+	          	if(lines.length > 1) {
+	          		String noMac = lines[0]; 
+	                res = lines[1];
+	          		if(lines.length > 2) {
+	          			int num = noMac.length() + 1;
+	          			res = input.substring(num);
+	          		}
+	
+	                  res = keyGen.getDecodedMessage(res, noMac);
+	          	} else {
+	          		res = input;
+	          	}
+	          	
+				System.out.println(res);
 				for(int i = 0; i < 1000; i++) {
 					if(running) {
 						Thread.sleep(10);
@@ -37,7 +56,8 @@ public class ServerHandler extends Thread {
 				}
 			}
 		} catch (Exception e) {
-			//System.out.println(e);
+			System.out.println("Error: heartbeat message not sent");
+			e.printStackTrace();
 		}
 	}
 
