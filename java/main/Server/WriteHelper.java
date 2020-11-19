@@ -16,7 +16,7 @@ public class WriteHelper {
         userMap = map;
         try {
             PrintWriter loginWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGIN_DATA_PATH)));
-            PrintWriter pendingRequestWriter = new PrintWriter(new BufferedWriter(new FileWriter(PENDING_REQUEST_PATH)));
+            PrintWriter pendingRequestWriter = new PrintWriter(new BufferedWriter(new FileWriter(PENDING_REQUEST_PATH, false)));
             PrintWriter userWriter;
             for (UserModel user : userMap.values()) {
                 loginWriter.println(user.getUsername() + "," + user.getPassword());
@@ -31,6 +31,7 @@ public class WriteHelper {
                 }
 
                 // add their pending friend requests to file 
+                pendingRequestWriter.flush();
                 for (String pendingFriend : user.getFriendRequests()) {
                     String recipient = user.getUsername();
                     pendingRequestWriter.println(recipient + "," + pendingFriend);

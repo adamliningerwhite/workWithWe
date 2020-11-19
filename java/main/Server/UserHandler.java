@@ -82,9 +82,9 @@ public class UserHandler extends Thread {
         }
     }
     
-    private String requestFriend(String friend) throws Exception {
+    private void requestFriend(String friend) throws Exception {
 
-      System.out.println(this.username + " has sent a friend request to " + friend);
+      System.out.println(this.username + " wants to friend request " + friend);
       
       String msg;
       UserModel potentialFriend = server.getUserMap().get(friend);

@@ -52,7 +52,9 @@ public class UserModel {
     }
 
     public void addFriend(String newFriend) {
-        friends.add(newFriend);
+        if(!friends.contains(newFriend)) {
+            friends.add(newFriend);
+        }
     }
 
     public void removeFriend(String oldFriend) {
@@ -104,8 +106,11 @@ public class UserModel {
         return friendRequests;
     }
     
-    public void addFriendRequest(String username) {
-        friendRequests.add(username);
+    public void addFriendRequest(String friend) {
+        if(!friendRequests.contains(friend)) {
+            friendRequests.add(friend);
+        }
+        System.out.println(this.username + " friend requests: " + friendRequests);
     }
 
     public boolean removeFriendRequest(String username) {
