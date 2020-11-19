@@ -52,7 +52,7 @@ public class UserHandler extends Thread {
             		msg = input;
             	}
               if(msg.equals("online")){
-                sendList();
+                heartbeatResponse();
               } else {
                 String[] values = msg.split(",");
                 String option = values[0];
@@ -92,6 +92,9 @@ public class UserHandler extends Thread {
       if (potentialFriend == null) {
           msg = "Error: " + friend + " is not a valid username.";
       }
+      else if (userModel.getFriends().contains(friend))  {
+        msg = "Error: " + friend + " is already your friend.";
+      }
       // If it exists, then add to their list of pending friend requests 
       else { 
           potentialFriend.addFriendRequest(this.username);
@@ -121,20 +124,30 @@ public class UserHandler extends Thread {
     private void incorrectInput() {
     }
 
-    private void sendList() throws Exception {
-    	List<UserHandler> users = server.getUsersOnline();
-    	String res;
-    	if(users.size() == 1 && users.get(0).getUsername() == username) {
-    		res = "Nobody is currently online";
-    	} else {
-    		res = "People online: \n";
-    		for(UserHandler user : users) {
-        		if(user.getUsername() != this.username) {
-        			res += user.getUsername() + "\n";
-        		}
-        	}
-    	}
+    private void heartbeatResponse() throws Exception {
 
+
+      // 1st line: This user's friends 
+      String firstLine = "1";
+      for (String friend : userModel.getFriends()) {
+        firstLine += "," + friend;
+      }
+
+      // 2nd line : This user's pending friend requests
+      String secondLine = "2";
+      for (String pendingFriend : userModel.getFriendRequests()) {
+        secondLine += "," + pendingFriend;
+      }
+
+      // 3rd line: friend request acceptances
+      String thirdLine = "3";
+
+      // 4th line: friend request rejections
+      String fourthLine = "4";
+
+
+    String res = firstLine + "\n" + secondLine + "\n" + thirdLine + "\n" + fourthLine;
+    System.out.println(res);
 		String noMac = encHelper.createEncoded(res);
 		res = encHelper.createEncodedMessage(res);
         res = noMac + '\n' + res;
