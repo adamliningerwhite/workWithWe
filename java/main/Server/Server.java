@@ -68,7 +68,7 @@ public class Server {
 				//System.out.println(transport);
 				encryptHelper = new EncryptHelper();
 				encryptHelper.decryptKeyTransport(transport);
-				
+
 
 				option = encryptHelper.getLoginType();
 				username = encryptHelper.getUsername();
@@ -84,11 +84,11 @@ public class Server {
 					if (res) {
 						first = true;
 					}
-					
+
 					break;
 				default:
 					System.out.println("Incorrect input!");
-					
+
 					break;
 				}
 			} catch (Exception e) {
@@ -150,7 +150,7 @@ public class Server {
 			currentUser.setEncHelper(encryptHelper);
 			UserHandler t = new UserHandler(s, dis, dos, username, this, currentUser);
 			onlineUsers.add(t);
-			
+
 			String msg = "successfully logged in";
 			String noMac = encryptHelper.createEncoded(msg);
 			msg = encryptHelper.createEncodedMessage(msg);
@@ -169,7 +169,7 @@ public class Server {
 			System.out.println("New user connected");
 			UserHandler t = new UserHandler(s, dis, dos, username, this, user);
 			onlineUsers.add(t);
-			
+
 			String msg = username + " successfully logged in";
 			String noMac = encryptHelper.createEncoded(msg);
 			msg = encryptHelper.createEncodedMessage(msg);

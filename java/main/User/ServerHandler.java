@@ -28,24 +28,20 @@ public class ServerHandler extends Thread {
 			while(running) {
 				streamOut.writeUTF(onlineMessage);
 				streamOut.flush();
-				
 				String res;
 				String input = streamIn.readUTF();
-            	String[] lines = input.split("[\\r\\n]");
-	          	
-	          	if(lines.length > 1) {
-	          		String noMac = lines[0]; 
-	                res = lines[1];
-	          		if(lines.length > 2) {
-	          			int num = noMac.length() + 1;
-	          			res = input.substring(num);
-	          		}
-	
-	                  res = keyGen.getDecodedMessage(res, noMac);
-	          	} else {
-	          		res = input;
-	          	}
-	          	
+        String[] lines = input.split("[\\r\\n]");
+      	if(lines.length > 1) {
+	    		String noMac = lines[0];
+	        res = lines[1];
+	    		if(lines.length > 2) {
+	  			int num = noMac.length() + 1;
+	  			res = input.substring(num);
+    		}
+        res = keyGen.getDecodedMessage(res, noMac);
+      	} else {
+      		res = input;
+      	}	
 				System.out.println(res);
 				for(int i = 0; i < 1000; i++) {
 					if(running) {
