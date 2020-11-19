@@ -21,7 +21,6 @@ public class Server {
 
 	private List<UserHandler> onlineUsers = new ArrayList<UserHandler>();
 	private Set<String> usernames = new HashSet<String>();
-	private Map<String, String> userPassCombo = new HashMap<String, String>();
 
 	// Map of program users
 	// key is username string, value is their UserModel object

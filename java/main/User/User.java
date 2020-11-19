@@ -48,7 +48,6 @@ public class User {
               first = false;
             }
 
-
             System.out.println("Type (1) to Create New User, (2) to Log In");
             String option = console.nextLine();
             switch(option) {
@@ -194,21 +193,21 @@ public class User {
     }
 
     private RSAPublicKey readPublicKeyFromFile(String filePath) {
-		RSAPublicKey key = null;
-		File publicKey = new File(filePath);
+      RSAPublicKey key = null;
+      File publicKey = new File(filePath);
 
-		try (FileInputStream is = new FileInputStream(publicKey)) {
-			byte[] encodedPublicKey = new byte[(int) publicKey.length()];
-			is.read(encodedPublicKey);
+      try (FileInputStream is = new FileInputStream(publicKey)) {
+        byte[] encodedPublicKey = new byte[(int) publicKey.length()];
+        is.read(encodedPublicKey);
 
-			KeyFactory kf = KeyFactory.getInstance("RSA");
-			X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedPublicKey);
-			key = (RSAPublicKey) kf.generatePublic(keySpec);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedPublicKey);
+        key = (RSAPublicKey) kf.generatePublic(keySpec);
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return key;
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      return key;
 	}
 
     /**

@@ -11,6 +11,7 @@ public class UserModel {
     private SecretKey encKey;
     private SecretKey macKey;
     private EncryptHelper encHelper;
+    private List<String> friendRequests;
 
    // private RSAPublicKey publicKey;
 
@@ -19,6 +20,7 @@ public class UserModel {
         this.password = password;
         this.encHelper = null;
         this.friends = new ArrayList<String>();
+        this.friendRequests = new ArrayList<String>();
     }
 
     public String getUsername() {
@@ -98,7 +100,15 @@ public class UserModel {
         this.macKey = newMacKey;
     }
 
-    public String toString() {
-        return "username: " + username + ", password: " + password + ", friends: " + friends + "\n";
+    public List<String> getFriendRequests() {
+        return friendRequests;
+    }
+    
+    public void addFriendRequest(String username) {
+        friendRequests.add(username);
+    }
+
+    public boolean removeFriendRequest(String username) {
+        return friendRequests.remove(username);
     }
 }

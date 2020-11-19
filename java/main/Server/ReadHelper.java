@@ -10,6 +10,7 @@ public class ReadHelper {
 
     private static final String DATA_PATH = "Data/";
     private static final String LOGIN_DATA_PATH = DATA_PATH + "login.txt";
+    private static final String PENDING_REQUEST_PATH = DATA_PATH + "pending_requests.txt";
 
     /**
      * 
@@ -30,6 +31,7 @@ public class ReadHelper {
             while (line != null) {
                 String[] loginPieces = line.split(",");
                 if (loginPieces.length != 2) {
+                    reader.readLine();
                     continue;
                 }
                 String username = loginPieces[0].trim();
@@ -42,6 +44,23 @@ public class ReadHelper {
                 line = reader.readLine();
             }
             reader.close();
+
+            // Read in pending friend requests 
+            reader = new BufferedReader(new FileReader(PENDING_REQUEST_PATH));
+            line = reader.readLine();
+            while(line != null) {
+                String[] requestPieces = line.split(",");
+                if(requestPieces.length != 2) {
+                    line = reader.readLine();
+                    continue;
+                }
+                String recipient = requestPieces[0];
+                String originator = requestPieces[1];
+                usersMap.get(recipient).addFriendRequest(originator);
+                
+                line = reader.readLine();
+            }
+            reader.close(); 
 
         } catch (IOException e) {
             e.printStackTrace();

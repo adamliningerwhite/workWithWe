@@ -9,12 +9,14 @@ public class WriteHelper {
 
     private static final String DATA_PATH = "Data/";
     private static final String LOGIN_DATA_PATH = DATA_PATH + "login.txt";
+    private static final String PENDING_REQUEST_PATH = DATA_PATH + "pending_requests.txt";
     private HashMap<String, UserModel> userMap;
 
     public void writeAllData(HashMap<String, UserModel> map) {
         userMap = map;
         try {
             PrintWriter loginWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGIN_DATA_PATH)));
+            PrintWriter pendingRequestWriter = new PrintWriter(new BufferedWriter(new FileWriter(PENDING_REQUEST_PATH)));
             PrintWriter userWriter;
             for (UserModel user : userMap.values()) {
                 loginWriter.println(user.getUsername() + "," + user.getPassword());
@@ -27,7 +29,14 @@ public class WriteHelper {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                // add their pending friend requests to file 
+                for (String pendingFriend : user.getFriendRequests()) {
+                    String recipient = user.getUsername();
+                    pendingRequestWriter.println(recipient + "," + pendingFriend);
+                }
             }
+            pendingRequestWriter.close();
             loginWriter.close();
         } catch(IOException e) {
             e.printStackTrace();

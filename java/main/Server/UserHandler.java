@@ -80,6 +80,19 @@ public class UserHandler extends Thread {
             e.printStackTrace(); 
         } 
     }
+
+    private String requestFriend(String username) {
+        UserModel potentialFriend = server.getUserMap().get(username);
+        // Check that username exists
+        if (potentialFriend == null) {
+            return "Error";
+        }
+        // If it exists, then add to their list of pending friend requests 
+        else { 
+            potentialFriend.addFriendRequest(this.username);
+        }
+        return "Success";
+    }
      
     private void sendList() throws Exception {
     	List<UserHandler> users = server.getUsersOnline();
