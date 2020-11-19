@@ -23,9 +23,11 @@ public class User {
     private KeyGen keyGen;
     private RSAPublicKey serverKey;
     private RSAPrivateKey userKey;
+    ServerHandler handler;
     String res;
     String keyTransportMsg;
     boolean first = true;
+    boolean loop = true;
 
     public User() throws Exception {
         createUser();
@@ -48,7 +50,6 @@ public class User {
               first = false;
             }
 
-
             System.out.println("Type (1) to Create New User, (2) to Log In");
             String option = console.nextLine();
             switch(option) {
@@ -69,82 +70,99 @@ public class User {
             if(res != "incorrect") {
             	String input = streamIn.readUTF();
             	String[] lines = input.split("[\\r\\n]");
-	          	
 	          	if(lines.length > 1) {
-	          		String noMac = lines[0]; 
+	          		String noMac = lines[0];
 	                res = lines[1];
 	          		if(lines.length > 2) {
 	          			int num = noMac.length() + 1;
 	          			res = input.substring(num);
 	          		}
-	
 	                  res = keyGen.getDecodedMessage(res, noMac);
 	          	} else {
 	          		res = input;
 	          	}
             }
-
             System.out.println(res);
-
 
             if(res.contains("successfully logged in")) {
 	            /* Loop to forward messages to server. Terminates when user types "logoff" */
 	            String fromUser = "";
 	            String toServer = "";
 	            String fromServer = "";
-	            ServerHandler handler = new ServerHandler(streamOut, streamIn, keyGen);
+	            handler = new ServerHandler(streamOut, streamIn, keyGen);
 	            Thread.sleep(5);
-	            System.out.println("Type 'Logoff' to sign out");
-	            while(!fromUser.equals("Logoff")) {
-	                try {
-	                    fromUser = console.nextLine();
-	                    String msg = fromUser;
-	                    String noMac = keyGen.createEncoded(msg);
-	                    msg = keyGen.createEncodedMessage(msg);
-	                    msg = noMac + '\n' + msg;
-	                    //System.out.println(msg);
-	                    streamOut.writeUTF(msg);
-	                    streamOut.flush();
-
-	                    if (fromUser.equals("Logoff")) {
-	                    	handler.end();
-	                    	fromServer = streamIn.readUTF();
-	                    	String[] lines = fromServer.split("[\\r\\n]");
-	        	          	
-	        	          	if(lines.length > 1) {
-	        	          		noMac = lines[0]; 
-	        	                msg = lines[1];
-	        	          		if(lines.length > 2) {
-	        	          			int num = noMac.length() + 1;
-	        	          			msg = fromServer.substring(num);
-	        	          		}
-	        	
-	        	                  msg = keyGen.getDecodedMessage(msg, noMac);
-	        	          	} else {
-	        	          		msg = fromServer;
-	        	          	}
-	                    	System.out.println(msg);
-	                    }
-	                } catch(IOException ioe) {
-	                    System.out.println("Sending error: " + ioe.getMessage());
-	                }
+	            while(loop) {
+                System.out.println("Type (1) to Logoff, (2) to add new user");
+                fromUser = console.nextLine();
+                switch (fromUser) {
+                  case "1":
+                    logoff();
+                    loop = false;
+                    break;
+                  case "2":
+                    addUser();
+                    break;
+                  default:
+                    System.out.println("Invalid input");
+                    break;
+                }
 	            }
-
-	            //close all the sockets and console
-	            console.close();
-	            streamOut.close();
-	            streamIn.close();
-	            s.close();
             } else {
               createUser();
             }
-
         }
         catch(IOException e) {
             //print error
             System.out.println("Connection failed due to following reason");
             System.out.println(e);
         }
+    }
+
+    private void logoff() throws Exception {
+      String msg = "1,";
+      String noMac = keyGen.createEncoded(msg);
+      msg = keyGen.createEncodedMessage(msg);
+      msg = noMac + '\n' + msg;
+      streamOut.writeUTF(msg);
+      streamOut.flush();
+      receiverServerMessage();
+      handler.end();
+      console.close();
+      streamOut.close();
+      streamIn.close();
+      s.close();
+    }
+
+    private void addUser() throws Exception {
+      String msg;
+      System.out.print("Enter friend request username: ");
+      String username = console.nextLine();
+      msg = "2," + username;
+      String noMac = keyGen.createEncoded(msg);
+      msg = keyGen.createEncodedMessage(msg);
+      msg = noMac + '\n' + msg;
+      streamOut.writeUTF(msg);
+      streamOut.flush();
+      receiverServerMessage();
+    }
+
+    private void receiverServerMessage() throws Exception {
+      String msg;
+      String noMac;
+      String fromServer = streamIn.readUTF();
+      String[] lines = fromServer.split("[\\r\\n]");
+      if(lines.length > 1) {
+        noMac = lines[0];
+        msg = lines[1];
+        if(lines.length > 2) {
+          int num = noMac.length() + 1;
+          msg = fromServer.substring(num);
+        }
+        msg = keyGen.getDecodedMessage(msg, noMac);
+      } else {
+        msg = fromServer;
+      }
+      System.out.println(msg);
     }
 
     private void newUser() throws Exception {
@@ -159,13 +177,11 @@ public class User {
         System.out.println("User successfully created!");
         // creates new public and private keys, creates keyGen to encrypt and decrypt
         keyGen = new KeyGen(username, potentialPassword, "1", serverKey);
-        
       } else {
         System.out.println("Passwords do not match!");
         newUser();
         return;
       }
-
       // key transport message includes login message as well
       keyTransportMsg = keyGen.getKeyTransportMsg();
       //System.out.println(keyTransportMsg);
@@ -178,10 +194,8 @@ public class User {
       username = console.nextLine();
       System.out.print("Enter password: ");
       password = console.nextLine();
-
       // creates new public and private keys, creates keyGen to encrypt and decrypt
       keyGen = new KeyGen(username, password, "2", serverKey);
-
       // key transport message includes login message as well
       keyTransportMsg = keyGen.getKeyTransportMsg();
       //System.out.println(keyTransportMsg);
@@ -196,15 +210,12 @@ public class User {
     private RSAPublicKey readPublicKeyFromFile(String filePath) {
 		RSAPublicKey key = null;
 		File publicKey = new File(filePath);
-
 		try (FileInputStream is = new FileInputStream(publicKey)) {
 			byte[] encodedPublicKey = new byte[(int) publicKey.length()];
 			is.read(encodedPublicKey);
-
 			KeyFactory kf = KeyFactory.getInstance("RSA");
 			X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedPublicKey);
 			key = (RSAPublicKey) kf.generatePublic(keySpec);
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -215,13 +226,11 @@ public class User {
      * args[0] ; username
      */
     public static void main(String[] args) {
-
         //check for correct # of parameters
         if (args.length != 0) {
             System.out.println("Incorrect number of parameters");
         } else {
             //Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-
             //create Alice to start communication
             try {
                 User user = new User();

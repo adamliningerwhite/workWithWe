@@ -21,7 +21,6 @@ public class Server {
 
 	private List<UserHandler> onlineUsers = new ArrayList<UserHandler>();
 	private Set<String> usernames = new HashSet<String>();
-	private Map<String, String> userPassCombo = new HashMap<String, String>();
 
 	// Map of program users
 	// key is username string, value is their UserModel object
@@ -69,7 +68,7 @@ public class Server {
 				//System.out.println(transport);
 				encryptHelper = new EncryptHelper();
 				encryptHelper.decryptKeyTransport(transport);
-				
+
 
 				option = encryptHelper.getLoginType();
 				username = encryptHelper.getUsername();
@@ -85,11 +84,11 @@ public class Server {
 					if (res) {
 						first = true;
 					}
-					
+
 					break;
 				default:
 					System.out.println("Incorrect input!");
-					
+
 					break;
 				}
 			} catch (Exception e) {
@@ -151,7 +150,7 @@ public class Server {
 			currentUser.setEncHelper(encryptHelper);
 			UserHandler t = new UserHandler(s, dis, dos, username, this, currentUser);
 			onlineUsers.add(t);
-			
+
 			String msg = "successfully logged in";
 			String noMac = encryptHelper.createEncoded(msg);
 			msg = encryptHelper.createEncodedMessage(msg);
@@ -170,7 +169,7 @@ public class Server {
 			System.out.println("New user connected");
 			UserHandler t = new UserHandler(s, dis, dos, username, this, user);
 			onlineUsers.add(t);
-			
+
 			String msg = username + " successfully logged in";
 			String noMac = encryptHelper.createEncoded(msg);
 			msg = encryptHelper.createEncodedMessage(msg);
