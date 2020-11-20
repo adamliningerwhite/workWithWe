@@ -11,7 +11,10 @@ public class UserModel {
     private SecretKey encKey;
     private SecretKey macKey;
     private EncryptHelper encHelper;
-    private List<String> friendRequests;
+
+    private List<String> pendingFriendRequests;
+    private List<String> acceptedRequests;
+    private List<String> rejectedRequests;
 
    // private RSAPublicKey publicKey;
 
@@ -20,7 +23,7 @@ public class UserModel {
         this.password = password;
         this.encHelper = null;
         this.friends = new ArrayList<String>();
-        this.friendRequests = new ArrayList<String>();
+        this.pendingFriendRequests = new ArrayList<String>();
     }
 
     public String getUsername() {
@@ -103,17 +106,37 @@ public class UserModel {
     }
 
     public List<String> getFriendRequests() {
-        return friendRequests;
+        return pendingFriendRequests;
     }
     
     public void addFriendRequest(String friend) {
-        if(!friendRequests.contains(friend)) {
-            friendRequests.add(friend);
+        if(!pendingFriendRequests.contains(friend)) {
+            pendingFriendRequests.add(friend);
         }
-        System.out.println(this.username + " friend requests: " + friendRequests);
     }
 
     public boolean removeFriendRequest(String username) {
-        return friendRequests.remove(username);
+        return pendingFriendRequests.remove(username);
     }
+
+    public void addAccepted(String friend) {
+        acceptedRequests.add(friend);
+    }
+    public List<String> getAccepted() {
+        return acceptedRequests;
+    }
+    public void clearAccepted() {
+        acceptedRequests.clear();
+    }
+
+    public void addRejected(String enemy) {
+        rejectedRequests.add(enemy);
+    }
+    public List<String> getRejected() {
+        return rejectedRequests;
+    }
+    public void clearRejected() {
+        rejectedRequests.clear();
+    }
+
 }
