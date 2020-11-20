@@ -174,19 +174,6 @@ public class UserHandler extends Thread {
     	dos.flush();
     }
 
-    private void logoff() throws Exception {
-      String msg;
-      System.out.println(username + " is logging off...");
-      server.removeUser(username);
-      msg = username + " successfully logged off";
-      String noMac = encHelper.createEncoded(msg);
-      msg = encHelper.createEncodedMessage(msg);
-      msg = noMac + '\n' + msg;
-      dos.writeUTF(msg);
-      dos.flush();
-      s.close();
-    }
-
     public String getUsername() {
     	return username;
     }
