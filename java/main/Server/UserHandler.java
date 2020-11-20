@@ -107,26 +107,20 @@ public class UserHandler extends Thread {
       dos.writeUTF(msg);
       dos.flush();
     }
-     
-    private void logoff() throws Exception {
-      String msg;
-      System.out.println(username + " is logging off...");
-      server.removeUser(username);
-      msg = username + " successfully logged off";
-      String noMac = encHelper.createEncoded(msg);
-      msg = encHelper.createEncodedMessage(msg);
-      msg = noMac + '\n' + msg;
-      dos.writeUTF(msg);
-      dos.flush();
-      s.close();
-    }
 
-    private void incorrectInput() {
+    private void requestResponse(String friend, boolean accept) {
+      UserModel friendModel = server.getUserMap().get(friend);
+      if (accept) {
+        friendModel.addFriend(this.username);
+        userModel.addFriend(friend);
+        friendModel.addAccepted(this.username);
+      } else {
+        friendModel.addRejected(this.username);
+      }
+      userModel.removeFriendRequest(friend);
     }
 
     private void heartbeatResponse() throws Exception {
-
-
       // 1st line: This user's friends 
       String firstLine = "1";
       for (String friend : userModel.getFriends()) {
@@ -141,9 +135,17 @@ public class UserHandler extends Thread {
 
       // 3rd line: friend request acceptances
       String thirdLine = "3";
+      for (String accepted : userModel.getAccepted()) {
+        thirdLine += "," + accepted;
+      }
+      userModel.clearAccepted();
 
       // 4th line: friend request rejections
       String fourthLine = "4";
+      for (String rejection : userModel.getRejected()) {
+        fourthLine += "," + rejection;
+      }
+      userModel.clearRejected();
 
 
     String res = firstLine + "\n" + secondLine + "\n" + thirdLine + "\n" + fourthLine;
@@ -153,8 +155,25 @@ public class UserHandler extends Thread {
     	dos.writeUTF(res);
     	dos.flush();
     }
+ 
+    private void logoff() throws Exception {
+      String msg;
+      System.out.println(username + " is logging off...");
+      server.removeUser(username);
+      msg = username + " successfully logged off";
+      String noMac = encHelper.createEncoded(msg);
+      msg = encHelper.createEncodedMessage(msg);
+      msg = noMac + '\n' + msg;
+      dos.writeUTF(msg);
+      dos.flush();
+      s.close();
+    }
 
     public String getUsername() {
     	return username;
+    }
+
+    private void incorrectInput() {
+      
     }
 }
