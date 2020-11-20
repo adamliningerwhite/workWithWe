@@ -147,7 +147,6 @@ public class UserHandler extends Thread {
 
 
     String res = firstLine + "\n" + secondLine + "\n" + thirdLine + "\n" + fourthLine;
-    System.out.println(res);
 		String noMac = encHelper.createEncoded(res);
 		res = encHelper.createEncodedMessage(res);
         res = noMac + '\n' + res;
