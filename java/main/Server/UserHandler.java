@@ -65,6 +65,11 @@ public class UserHandler extends Thread {
                     if (values.length == 2)
                       requestFriend(values[1]);
                     break;
+                  case "3":
+                    if(values.length == 3){
+
+                    }
+                    break;
                   default:
                     incorrectInput();
                     break;
@@ -81,11 +86,11 @@ public class UserHandler extends Thread {
             e.printStackTrace();
         }
     }
-    
+
     private void requestFriend(String friend) throws Exception {
 
       System.out.println(this.username + " wants to friend request " + friend);
-      
+
       String msg;
       UserModel potentialFriend = server.getUserMap().get(friend);
       // Check that username exists
@@ -95,8 +100,8 @@ public class UserHandler extends Thread {
       else if (userModel.getFriends().contains(friend))  {
         msg = "Error: " + friend + " is already your friend.";
       }
-      // If it exists, then add to their list of pending friend requests 
-      else { 
+      // If it exists, then add to their list of pending friend requests
+      else {
           potentialFriend.addFriendRequest(this.username);
           msg = "Success! Friend request sent to " + friend;
       }
@@ -107,7 +112,7 @@ public class UserHandler extends Thread {
       dos.writeUTF(msg);
       dos.flush();
     }
-     
+
     private void logoff() throws Exception {
       String msg;
       System.out.println(username + " is logging off...");
@@ -127,7 +132,7 @@ public class UserHandler extends Thread {
     private void heartbeatResponse() throws Exception {
 
 
-      // 1st line: This user's friends 
+      // 1st line: This user's friends
       String firstLine = "1";
       for (String friend : userModel.getFriends()) {
         firstLine += "," + friend;

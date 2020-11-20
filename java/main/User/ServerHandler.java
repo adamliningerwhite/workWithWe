@@ -85,6 +85,10 @@ public class ServerHandler extends Thread {
 		}
 	}
 
+	public HashSet<String> getPendingRequets() {
+		return requests;
+	}
+
 	private HashSet<String> compareLists(String[] values, HashSet<String> list) {
 		HashSet<String> freshList = new HashSet<String>();
 		for(int i = 1; i < values.length; i++)

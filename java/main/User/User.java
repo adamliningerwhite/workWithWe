@@ -92,7 +92,7 @@ public class User {
 	            handler = new ServerHandler(streamOut, streamIn, keyGen);
 	            Thread.sleep(5);
 	            while(loop) {
-                System.out.println("Type (1) to Logoff, (2) to add new friend");
+                System.out.println("Type (1) to Logoff, (2) to add new friend, (3) to respond to friend request");
                 fromUser = console.nextLine();
                 switch (fromUser) {
                   case "1":
@@ -101,6 +101,9 @@ public class User {
                     break;
                   case "2":
                     addUser();
+                    break;
+                  case "3":
+                    friendRequest();
                     break;
                   default:
                     System.out.println("Invalid input");
@@ -118,13 +121,40 @@ public class User {
         }
     }
 
+    private void friendRequest() throws Exception {
+      HashSet<String> requests = handler.getPendingRequets();
+      if(requests.size() == 0) {
+        System.out.println("No pending friend requests");
+      } else {
+        Object[] requestArray = requests.toArray();
+        for(int i = 0; i < requestArray.length; i++)
+          System.out.println("(" + i + "): " + requestArray[i].toString());
+        System.out.print("Enter the number of you user you'd like to respond to: ");
+        String res = console.nextLine();
+        try {
+          int option = Integer.parseInt(res);
+          if(option < 0 | option >= requestArray.length){
+            System.out.println("Input out of range");
+          } else {
+            String username = requestArray[option].toString();
+            System.out.print("Enter (0) to reject the request, and (1) to accept the request: ");
+            String response = console.nextLine();
+            if(response != "0" && response != "1") {
+              System.out.println("Incorrect input");
+            } else {
+              String message = "3," + username + "," + response;
+              sendMessage(message);
+            }
+          }
+        } catch (Exception e) {
+          System.out.println("Incorrect input");
+        }
+      }
+    }
+
     private void logoff() throws Exception {
       String msg = "1,";
-      String noMac = keyGen.createEncoded(msg);
-      msg = keyGen.createEncodedMessage(msg);
-      msg = noMac + '\n' + msg;
-      streamOut.writeUTF(msg);
-      streamOut.flush();
+      sendMessage(msg);
       receiverServerMessage();
       handler.end();
       console.close();
@@ -138,12 +168,16 @@ public class User {
       System.out.print("Enter friend request username: ");
       String username = console.nextLine();
       msg = "2," + username;
+      sendMessage(msg);
+      receiverServerMessage();
+    }
+
+    private void sendMessage(String msg) throws Exception {
       String noMac = keyGen.createEncoded(msg);
       msg = keyGen.createEncodedMessage(msg);
       msg = noMac + '\n' + msg;
       streamOut.writeUTF(msg);
       streamOut.flush();
-      receiverServerMessage();
     }
 
     private void receiverServerMessage() throws Exception {
