@@ -67,7 +67,7 @@ public class UserHandler extends Thread {
                     break;
                   case "3":
                     if(values.length == 3){
-
+                      requestResponse(values[1], values[2].equals("1"));
                     }
                     break;
                   default:

@@ -54,7 +54,7 @@ public class ServerHandler extends Thread {
 					results();
 				}
 				different = false;
-				Thread.sleep(10);
+				Thread.sleep(500);
 			}
 		} catch (Exception e) {
 			System.out.println("Error: heartbeat message not sent");

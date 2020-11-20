@@ -139,11 +139,12 @@ public class User {
             String username = requestArray[option].toString();
             System.out.print("Enter (0) to reject the request, and (1) to accept the request: ");
             String response = console.nextLine();
-            if(response != "0" && response != "1") {
-              System.out.println("Incorrect input");
-            } else {
+            System.out.println("Response: " + response);
+            if(response.equals("0") | response.equals("1")) {
               String message = "3," + username + "," + response;
               sendMessage(message);
+            } else {
+              System.out.println("Incorrect input");
             }
           }
         } catch (Exception e) {

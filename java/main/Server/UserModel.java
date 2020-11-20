@@ -24,6 +24,8 @@ public class UserModel {
         this.encHelper = null;
         this.friends = new ArrayList<String>();
         this.pendingFriendRequests = new ArrayList<String>();
+        this.acceptedRequests = new ArrayList<String>();
+        this.rejectedRequests = new ArrayList<String>();
     }
 
     public String getUsername() {
@@ -108,7 +110,7 @@ public class UserModel {
     public List<String> getFriendRequests() {
         return pendingFriendRequests;
     }
-    
+
     public void addFriendRequest(String friend) {
         if(!pendingFriendRequests.contains(friend)) {
             pendingFriendRequests.add(friend);
