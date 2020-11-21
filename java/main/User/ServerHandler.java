@@ -75,8 +75,10 @@ public class ServerHandler extends Thread {
 						requests = compareLists(values, requests);
 						break;
 					case "3":
+						accepts = compareLists(values, accepts);
 						break;
 					case "4":
+						rejects = compareLists(values, rejects);
 						break;
 					default:
 						break;
@@ -124,6 +126,24 @@ public class ServerHandler extends Thread {
 		else
 			pendingList = pendingList.substring(0, pendingList.length() - 2);
 		System.out.println(pendingList);
+		String acceptList = "Accepted friend requests: ";
+		for (String accept : accepts) {
+			acceptList += accept + ", ";
+		}
+		if(accepts.size() == 0)
+			acceptList = "No accepted friend requests";
+		else
+			acceptList = acceptList.substring(0, acceptList.length() - 2);
+		System.out.println(acceptList);
+		String rejectList = "Rejected friend requests: ";
+		for (String reject : rejects) {
+			rejectList += reject + ", ";
+		}
+		if(rejects.size() == 0)
+			rejectList = "No rejected friend requests";
+		else
+			rejectList = rejectList.substring(0, rejectList.length() - 2);
+		System.out.println(rejectList);
 	}
 
 	public void end() {
