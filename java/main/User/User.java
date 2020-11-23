@@ -92,7 +92,7 @@ public class User {
 	            handler = new ServerHandler(streamOut, streamIn, keyGen);
 	            Thread.sleep(5);
 	            while(loop) {
-                System.out.println("Type (1) to Logoff, (2) to add new friend, (3) to respond to friend request");
+                System.out.println("Type (1) to Logoff, (2) to add new friend, (3) to respond to friend request, (4) to flip working status");
                 fromUser = console.nextLine();
                 switch (fromUser) {
                   case "1":
@@ -104,6 +104,9 @@ public class User {
                     break;
                   case "3":
                     friendRequest();
+                    break;
+                  case "4":
+                    flipStatus();
                     break;
                   default:
                     System.out.println("Invalid input");
@@ -162,6 +165,11 @@ public class User {
       streamOut.close();
       streamIn.close();
       s.close();
+    }
+
+    private void flipStatus() throws Exception {
+      String msg = "4,";
+      sendMessage(msg);
     }
 
     private void addUser() throws Exception {

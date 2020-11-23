@@ -16,6 +16,8 @@ public class ServerHandler extends Thread {
 	private HashSet<String> requests = new HashSet<String>();
 	private HashSet<String> accepts = new HashSet<String>();
 	private HashSet<String> rejects = new HashSet<String>();
+	private HashSet<String> online = new HashSet<String>();
+	private String status = "";
 
 	boolean different = true;
 
@@ -80,10 +82,24 @@ public class ServerHandler extends Thread {
 					case "4":
 						rejects = compareLists(values, rejects);
 						break;
+					case "5":
+						checkStatus(values);
+						break;
+					case "6":
+						online = compareLists(values, online);
+						break;
 					default:
 						break;
 				}
 			}
+		}
+	}
+
+	private void checkStatus(String[] values) {
+		String incoming = values[1];
+		if(!incoming.equals(status)){
+			status = incoming;
+			different = true;
 		}
 	}
 
@@ -114,7 +130,7 @@ public class ServerHandler extends Thread {
 		for(String friend : friends)
 			friendList += friend + ", ";
 		if(friends.size() == 0)
-			friendList = "You have no friends ya loser";
+			friendList = "You have no friends, get some friends";
 		else
 			friendList = friendList.substring(0, friendList.length() - 2);
 		System.out.println(friendList);
@@ -144,6 +160,15 @@ public class ServerHandler extends Thread {
 		else
 			rejectList = rejectList.substring(0, rejectList.length() - 2);
 		System.out.println(rejectList);
+		System.out.println(status);
+		String onlineFriends = "Online friends: ";
+		for(String on : online)
+			onlineFriends += on + ", ";
+		if(online.size() == 0)
+			onlineFriends = "You have no friends online";
+		else
+			onlineFriends = onlineFriends.substring(0, onlineFriends.length() - 2);
+		System.out.println(onlineFriends);
 	}
 
 	public void end() {

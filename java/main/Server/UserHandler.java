@@ -70,6 +70,9 @@ public class UserHandler extends Thread {
                       requestResponse(values[1], values[2].equals("1"));
                     }
                     break;
+                  case "4":
+                    flipStatus();
+                    break;
                   default:
                     incorrectInput();
                     break;
@@ -85,6 +88,10 @@ public class UserHandler extends Thread {
         } catch(IOException e){
             e.printStackTrace();
         }
+    }
+
+    private void flipStatus() {
+
     }
 
     private void requestFriend(String friend) throws Exception {
