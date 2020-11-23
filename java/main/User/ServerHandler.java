@@ -17,7 +17,7 @@ public class ServerHandler extends Thread {
 	private HashSet<String> accepts = new HashSet<String>();
 	private HashSet<String> rejects = new HashSet<String>();
 	private HashSet<String> online = new HashSet<String>();
-	private String status = "";
+	private String status = "hangin' ten";
 
 	boolean different = true;
 
