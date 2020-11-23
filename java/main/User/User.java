@@ -217,9 +217,20 @@ public class User {
       String repeatedPassword = console.nextLine();
       if(potentialPassword.equals(repeatedPassword)){
         password = potentialPassword;
-        System.out.println("User successfully created!");
-        // creates new public and private keys, creates keyGen to encrypt and decrypt
-        keyGen = new KeyGen(username, potentialPassword, "1", serverKey);
+        
+        Classify classifier = new Classify();
+        String classify = classifier.evaluatePassword(password);
+        System.out.println("Password strength: " + classify);
+        System.out.println("Type (1) to use password, (2) to change password");
+        String next = console.nextLine();
+        if(next.equals("2")) {
+        	newUser();
+        	return;
+        } else {
+        	System.out.println("User successfully created!");
+            // creates new public and private keys, creates keyGen to encrypt and decrypt
+            keyGen = new KeyGen(username, potentialPassword, "1", serverKey);
+        }
       } else {
         System.out.println("Passwords do not match!");
         newUser();
