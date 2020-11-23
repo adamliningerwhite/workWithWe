@@ -11,7 +11,9 @@ public class UserModel {
     private SecretKey encKey;
     private SecretKey macKey;
     private EncryptHelper encHelper;
+    private boolean working;
 
+    private List<String> friendsOnline;
     private List<String> pendingFriendRequests;
     private List<String> acceptedRequests;
     private List<String> rejectedRequests;
@@ -23,9 +25,11 @@ public class UserModel {
         this.password = password;
         this.encHelper = null;
         this.friends = new ArrayList<String>();
+        this.friendsOnline = new ArrayList<String>();
         this.pendingFriendRequests = new ArrayList<String>();
         this.acceptedRequests = new ArrayList<String>();
         this.rejectedRequests = new ArrayList<String>();
+        working = false;
     }
 
     public String getUsername() {
@@ -141,4 +145,25 @@ public class UserModel {
         rejectedRequests.clear();
     }
 
+    public boolean isWorking() {
+        return working;
+    }
+    public void setWorkingStatus(boolean status) {
+        working = status;
+    }
+    public void flipStatus() {
+        working = !working;
+    }
+
+    public void addFriendOnline(String friend) {
+        if (!friendsOnline.contains(friend)) {
+            friendsOnline.add(friend);
+        }
+    }
+    public List<String> getFriendsOnline() {
+        return friendsOnline;
+    }
+    public void removeFriendOnline(String friend) {
+        friendsOnline.remove(friend);
+    }
 }

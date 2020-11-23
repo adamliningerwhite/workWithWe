@@ -160,7 +160,7 @@ public class ServerHandler extends Thread {
 		else
 			rejectList = rejectList.substring(0, rejectList.length() - 2);
 		System.out.println(rejectList);
-		System.out.println("Status" + status);
+		System.out.println("Status: " + status);
 		String onlineFriends = "Online friends: ";
 		for(String on : online)
 			onlineFriends += on + ", ";
