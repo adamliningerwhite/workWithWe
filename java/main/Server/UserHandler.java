@@ -87,6 +87,32 @@ public class UserHandler extends Thread {
         }
     }
 
+    private void flipStatus() {
+
+      HashMap<String,UserModel> userMap = server.getUserMap();
+
+      if (userModel.isWorking()) {
+        // Switch to not working 
+        userModel.flipStatus();
+      
+        // Remove myself from all friends onlineFriends lists
+        for (String friendUsername : userModel.getFriends()) {
+          UserModel friendModel = userMap.get(friendUsername);
+          friendModel.removeFriendOnline(this.username);
+        }
+        
+      } else {
+        // Switch to working 
+        userModel.flipStatus();
+      
+        // Add myself to all friends onlineFriends lists 
+        for (String friendUsername : userModel.getFriends()) {
+          UserModel friendModel = userMap.get(friendUsername);
+          friendModel.addFriendOnline(this.username);
+        }
+      }
+    }
+
     private void requestFriend(String friend) throws Exception {
 
       System.out.println(this.username + " wants to friend request " + friend);
@@ -99,6 +125,9 @@ public class UserHandler extends Thread {
       }
       else if (userModel.getFriends().contains(friend))  {
         msg = "Error: " + friend + " is already your friend.";
+      }
+      else if (friend.equals(this.username)){
+        msg = "Error: cannot add yourself as a friend."; 
       }
       // If it exists, then add to their list of pending friend requests
       else {
@@ -165,13 +194,26 @@ public class UserHandler extends Thread {
       }
       userModel.clearRejected();
 
+      // 5th line: user's working status 
+      String fifthLine = "5";
+      if (userModel.isWorking()) {
+        fifthLine += ",grinding";
+      } else {
+        fifthLine += ",hangin' ten";
+      }
 
-    String res = firstLine + "\n" + secondLine + "\n" + thirdLine + "\n" + fourthLine;
-		String noMac = encHelper.createEncoded(res);
-		res = encHelper.createEncodedMessage(res);
-        res = noMac + '\n' + res;
-    	dos.writeUTF(res);
-    	dos.flush();
+      // 6th line: friends who are currently working 
+      String sixthLine = "6";
+      for (String friendOnline : userModel.getFriendsOnline()) {
+        sixthLine += "," + friendOnline;
+      }
+
+      String res = firstLine + "\n" + secondLine + "\n" + thirdLine + "\n" + fourthLine + "\n" + fifthLine + "\n" + sixthLine;
+      String noMac = encHelper.createEncoded(res);
+      res = encHelper.createEncodedMessage(res);
+      res = noMac + '\n' + res;
+      dos.writeUTF(res);
+      dos.flush();
     }
 
     public String getUsername() {
