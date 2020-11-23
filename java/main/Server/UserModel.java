@@ -148,6 +148,9 @@ public class UserModel {
     public boolean isWorking() {
         return working;
     }
+    public void setWorkingStatus(boolean status) {
+        working = status;
+    }
     public void flipStatus() {
         working = !working;
     }

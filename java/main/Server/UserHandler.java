@@ -146,6 +146,13 @@ public class UserHandler extends Thread {
     }
 
     private void logoff() throws Exception {
+      // Remove myself from all friends onlineFriends lists
+      Map<String, UserModel> userMap = server.getUserMap();
+      for (String friendUsername : userModel.getFriends()) {
+        UserModel friendModel = userMap.get(friendUsername);
+        friendModel.removeFriendOnline(this.username);
+      }
+      userModel.setWorkingStatus(false);
       String msg;
       System.out.println(username + " is logging off...");
       server.removeUser(username);
