@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.Base64;
 import java.util.HashMap;
 
 public class WriteHelper {
@@ -19,7 +20,8 @@ public class WriteHelper {
             PrintWriter pendingRequestWriter = new PrintWriter(new BufferedWriter(new FileWriter(PENDING_REQUEST_PATH, false)));
             PrintWriter userWriter;
             for (UserModel user : userMap.values()) {
-                loginWriter.println(user.getUsername() + "," + user.getPassword());
+            	String salt = Base64.getEncoder().encodeToString(user.getSalt());
+                loginWriter.println(user.getUsername() + "," + user.getPassword() + "," + salt);
                 try {
                     userWriter = new PrintWriter(new BufferedWriter(new FileWriter(DATA_PATH + user.getUsername() + ".txt")));
                     for (String friend : user.getFriends()) {

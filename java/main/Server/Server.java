@@ -44,6 +44,7 @@ public class Server {
 		ServerSocket mainServer = new ServerSocket(USER_LISTEN_PORT);
 
 		ReadHelper userDataReader = new ReadHelper();
+		
 		userMap = userDataReader.readData();
 
 		WriterThread userDataWriter = new WriterThread(this);
@@ -56,8 +57,7 @@ public class Server {
 				dis = new DataInputStream(s.getInputStream());
 				dos = new DataOutputStream(s.getOutputStream());
 
-				// TODO: send certificate? or send a file with a path to the certificate?
-
+				//TODO: "certificate" workaround sending public key
 				if (first) {
 					dos.writeUTF("../Server/ServerKeys/serverpublic.key");
 					dos.flush();
@@ -130,6 +130,9 @@ public class Server {
 
 	private boolean logIn() throws Exception {
 		UserModel currentUser = userMap.get(username);
+		byte[] salt = currentUser.getSalt();
+		System.out.println(salt);
+		password = encryptHelper.hashPassword(password, salt);
 
 		if (currentUser == null) {
 			String msg = "the username " + username + " does not exist";
@@ -163,7 +166,10 @@ public class Server {
 
 	private void createNewUser() throws Exception {
 		if (!usernames.contains(username)) {
+			byte[] salt = encryptHelper.getSalt();
+			password = encryptHelper.hashPassword(password, salt);
 			UserModel user = new UserModel(username, password);
+			user.setSalt(salt);
 			user.setEncHelper(encryptHelper);
 			userMap.put(username, user);
 			System.out.println("New user connected");

@@ -6,6 +6,7 @@ public class UserModel {
 
     private String username;
     private String password;
+    private byte[] salt;
     private List<String> friends;
     private SecretKey sessionKey;
     private SecretKey encKey;
@@ -47,7 +48,15 @@ public class UserModel {
     public void setPassword(String newPass) {
         this.password = newPass;
     }
+    
+    public byte[] getSalt() {
+    	return this.salt;
+    }
 
+    public void setSalt(byte[] salt) {
+    	this.salt = salt;
+    }
+    
     public boolean checkPassword(String pass) {
       return password.equals(pass);
     }

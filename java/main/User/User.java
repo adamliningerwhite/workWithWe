@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
@@ -14,6 +15,7 @@ public class User {
     private static final int USER_SERVER_PORT = 4232;
     private static final int MESSAGE_SERVER_PORT = 4771;
     private static final String SERVER_ADDRESS = "localhost";
+    
     private String username;
     private String password;
     private Scanner console;
@@ -47,6 +49,7 @@ public class User {
             if(first){
               String keyPath = streamIn.readUTF();
               serverKey = readPublicKeyFromFile(keyPath);
+              System.out.println("first?");
               first = false;
             }
 
@@ -284,8 +287,6 @@ public class User {
         if (args.length != 0) {
             System.out.println("Incorrect number of parameters");
         } else {
-            //Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-            //create Alice to start communication
             try {
                 User user = new User();
             } catch (Exception e) {

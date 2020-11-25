@@ -5,6 +5,7 @@ import java.nio.Buffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Base64;
 
 public class ReadHelper {
 
@@ -30,13 +31,16 @@ public class ReadHelper {
 
             while (line != null) {
                 String[] loginPieces = line.split(",");
-                if (loginPieces.length != 2) {
+                if (loginPieces.length != 3) {
                     reader.readLine();
                     continue;
                 }
                 String username = loginPieces[0].trim();
                 String password = loginPieces[1].trim();
+                String saltString = loginPieces[2].trim();
+                byte[] salt = Base64.getDecoder().decode(saltString);
                 UserModel user = new UserModel(username, password);
+                user.setSalt(salt);
                 addFriends(user);
 
                 usersMap.put(username, user);
