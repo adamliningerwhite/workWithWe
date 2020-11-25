@@ -20,6 +20,7 @@ public class Server {
 	private static final int MESSAGE_LISTEN_PORT = 4771;
 
 	private List<UserHandler> onlineUsers = new ArrayList<UserHandler>();
+	private List<String> takenUsernames = new ArrayList<String>();
 	private Set<String> usernames = new HashSet<String>();
 
 	// Map of program users
@@ -46,6 +47,7 @@ public class Server {
 		ReadHelper userDataReader = new ReadHelper();
 		
 		userMap = userDataReader.readData();
+		getTakenUsernames();
 
 		WriterThread userDataWriter = new WriterThread(this);
 
@@ -76,8 +78,10 @@ public class Server {
 
 				switch (option) {
 				case "1":
-					createNewUser();
-					first = true;
+					boolean res1 = createNewUser();
+					if (res1) {
+						first = true;
+					}
 					break;
 				case "2":
 					boolean res = logIn();
@@ -106,6 +110,12 @@ public class Server {
 		}
 	}
 
+	public void getTakenUsernames() {
+		for(Map.Entry<String, UserModel> users : userMap.entrySet()) {
+			takenUsernames.add(users.getKey());
+		}
+	}
+	
 	public HashMap<String, UserModel> getUserMap() {
 		return userMap;
 	}
@@ -130,12 +140,20 @@ public class Server {
 
 	private boolean logIn() throws Exception {
 		UserModel currentUser = userMap.get(username);
-		byte[] salt = currentUser.getSalt();
-		System.out.println(salt);
-		password = encryptHelper.hashPassword(password, salt);
-
+		if(currentUser != null) {
+			byte[] salt = currentUser.getSalt();
+			password = encryptHelper.hashPassword(password, salt);
+		}
+		
 		if (currentUser == null) {
 			String msg = "the username " + username + " does not exist";
+			String noMac = encryptHelper.createEncoded(msg);
+			msg = encryptHelper.createEncodedMessage(msg);
+            msg = noMac + '\n' + msg;
+			dos.writeUTF(msg);
+			return false;
+		} else if (usernames.contains(username)) {
+			String msg = "username is currently logged in";
 			String noMac = encryptHelper.createEncoded(msg);
 			msg = encryptHelper.createEncodedMessage(msg);
             msg = noMac + '\n' + msg;
@@ -153,6 +171,7 @@ public class Server {
 			currentUser.setEncHelper(encryptHelper);
 			UserHandler t = new UserHandler(s, dis, dos, username, this, currentUser);
 			onlineUsers.add(t);
+			usernames.add(username);
 
 			String msg = "successfully logged in";
 			String noMac = encryptHelper.createEncoded(msg);
@@ -164,8 +183,8 @@ public class Server {
 		return true;
 	}
 
-	private void createNewUser() throws Exception {
-		if (!usernames.contains(username)) {
+	private boolean createNewUser() throws Exception {
+		if (!takenUsernames.contains(username)) {
 			byte[] salt = encryptHelper.getSalt();
 			password = encryptHelper.hashPassword(password, salt);
 			UserModel user = new UserModel(username, password);
@@ -175,12 +194,22 @@ public class Server {
 			System.out.println("New user connected");
 			UserHandler t = new UserHandler(s, dis, dos, username, this, user);
 			onlineUsers.add(t);
+			usernames.add(username);
+			takenUsernames.add(username);
 
-			String msg = username + " successfully logged in";
+			String msg = "User " + username + " successfully created!";
 			String noMac = encryptHelper.createEncoded(msg);
 			msg = encryptHelper.createEncodedMessage(msg);
             msg = noMac + '\n' + msg;
 			dos.writeUTF(msg);
+			
+			msg = username + " successfully logged in";
+			noMac = encryptHelper.createEncoded(msg);
+			msg = encryptHelper.createEncodedMessage(msg);
+            msg = noMac + '\n' + msg;
+			dos.writeUTF(msg);
+			
+			return true;
 		} else {
 			String msg = "the username " + username + " is taken";
 			String noMac = encryptHelper.createEncoded(msg);
@@ -189,6 +218,8 @@ public class Server {
 			dos.writeUTF(msg);
 		}
 		dos.flush();
+		
+		return false;
 	}
 
 	private void retrievePassword() {

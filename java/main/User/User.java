@@ -49,7 +49,6 @@ public class User {
             if(first){
               String keyPath = streamIn.readUTF();
               serverKey = readPublicKeyFromFile(keyPath);
-              System.out.println("first?");
               first = false;
             }
 
@@ -58,7 +57,28 @@ public class User {
             switch(option) {
               case "1":
                 newUser();
-                res = "correct";
+                String input = streamIn.readUTF();
+            	String[] lines = input.split("[\\r\\n]");
+	          	if(lines.length > 1) {
+	          		String noMac = lines[0];
+	                res = lines[1];
+	          		if(lines.length > 2) {
+	          			int num = noMac.length() + 1;
+	          			res = input.substring(num);
+	          		}
+	                res = keyGen.getDecodedMessage(res, noMac);
+	          	} else {
+	          		res = input;
+	          	}
+            
+	          	System.out.println(res);
+	          	
+	          	if(res.contains("successfully created!")) {
+	          		res = "correct";
+	          	} else {
+	          		first = false;
+	          		res = "incorrect";
+	          	}
                 break;
               case "2":
                 logIn();
@@ -84,8 +104,8 @@ public class User {
 	          	} else {
 	          		res = input;
 	          	}
+	          	System.out.println(res);
             }
-            System.out.println(res);
 
             if(res.contains("successfully logged in")) {
 	            /* Loop to forward messages to server. Terminates when user types "logoff" */
@@ -230,7 +250,7 @@ public class User {
         	newUser();
         	return;
         } else {
-        	System.out.println("User successfully created!");
+        	System.out.println("User being created...");
             // creates new public and private keys, creates keyGen to encrypt and decrypt
             keyGen = new KeyGen(username, potentialPassword, "1", serverKey);
         }
