@@ -45,7 +45,7 @@ public class Server {
 		ServerSocket mainServer = new ServerSocket(USER_LISTEN_PORT);
 
 		ReadHelper userDataReader = new ReadHelper();
-		
+
 		userMap = userDataReader.readData();
 		getTakenUsernames();
 
@@ -55,7 +55,6 @@ public class Server {
 		while (true) {
 			try {
 				s = mainServer.accept();
-
 				dis = new DataInputStream(s.getInputStream());
 				dos = new DataOutputStream(s.getOutputStream());
 
@@ -65,7 +64,6 @@ public class Server {
 					dos.flush();
 					first = false;
 				}
-
 				String transport = dis.readUTF();
 				//System.out.println(transport);
 				encryptHelper = new EncryptHelper();
@@ -75,7 +73,6 @@ public class Server {
 				option = encryptHelper.getLoginType();
 				username = encryptHelper.getUsername();
 				password = encryptHelper.getPassword();
-
 				switch (option) {
 				case "1":
 					boolean res1 = createNewUser();
@@ -88,7 +85,6 @@ public class Server {
 					if (res) {
 						first = true;
 					}
-
 					break;
 				default:
 					System.out.println("Incorrect input!");
@@ -115,7 +111,7 @@ public class Server {
 			takenUsernames.add(users.getKey());
 		}
 	}
-	
+
 	public HashMap<String, UserModel> getUserMap() {
 		return userMap;
 	}
@@ -144,7 +140,7 @@ public class Server {
 			byte[] salt = currentUser.getSalt();
 			password = encryptHelper.hashPassword(password, salt);
 		}
-		
+
 		if (currentUser == null) {
 			String msg = "the username " + username + " does not exist";
 			String noMac = encryptHelper.createEncoded(msg);
@@ -202,13 +198,13 @@ public class Server {
 			msg = encryptHelper.createEncodedMessage(msg);
             msg = noMac + '\n' + msg;
 			dos.writeUTF(msg);
-			
+
 			msg = username + " successfully logged in";
 			noMac = encryptHelper.createEncoded(msg);
 			msg = encryptHelper.createEncodedMessage(msg);
             msg = noMac + '\n' + msg;
 			dos.writeUTF(msg);
-			
+
 			return true;
 		} else {
 			String msg = "the username " + username + " is taken";
@@ -218,7 +214,7 @@ public class Server {
 			dos.writeUTF(msg);
 		}
 		dos.flush();
-		
+
 		return false;
 	}
 

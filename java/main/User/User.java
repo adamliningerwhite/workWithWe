@@ -15,7 +15,7 @@ public class User {
     private static final int USER_SERVER_PORT = 4232;
     private static final int MESSAGE_SERVER_PORT = 4771;
     private static final String SERVER_ADDRESS = "localhost";
-    
+
     private String username;
     private String password;
     private Scanner console;
@@ -43,48 +43,42 @@ public class User {
             streamOut = new DataOutputStream(s.getOutputStream());
             streamIn = new DataInputStream(s.getInputStream());
             System.out.println("Connected to Server");
-
-            //TODO: authenticate server here and save RSAPublicKey to file "serverKey"
-            //currently just reads a key from file and saves it as the public key for the server
             if(first){
               String keyPath = streamIn.readUTF();
               serverKey = readPublicKeyFromFile(keyPath);
               first = false;
             }
-
             System.out.println("Type (1) to Create New User, (2) to Log In");
             String option = console.nextLine();
             switch(option) {
               case "1":
                 newUser();
                 String input = streamIn.readUTF();
-            	String[] lines = input.split("[\\r\\n]");
-	          	if(lines.length > 1) {
-	          		String noMac = lines[0];
-	                res = lines[1];
+            	  String[] lines = input.split("[\\r\\n]");
+	          	  if(lines.length > 1) {
+                  String noMac = lines[0];
+                  res = lines[1];
 	          		if(lines.length > 2) {
 	          			int num = noMac.length() + 1;
 	          			res = input.substring(num);
 	          		}
-	                res = keyGen.getDecodedMessage(res, noMac);
-	          	} else {
-	          		res = input;
-	          	}
-            
-	          	System.out.println(res);
-	          	
-	          	if(res.contains("successfully created!")) {
+	              res = keyGen.getDecodedMessage(res, noMac);
+	          	  } else {
+                  res = input;
+                }
+                System.out.println(res);
+	          	  if(res.contains("successfully created!")) {
 	          		res = "correct";
-	          	} else {
-	          		first = false;
-	          		res = "incorrect";
-	          	}
+	          	  } else {
+	          		  res = "incorrect";
+	          	  }
                 break;
               case "2":
                 logIn();
                 res = "correct";
                 break;
               default:
+                wrongInput();
                 System.out.println("Incorrect input!");
                 res = "incorrect";
                 break;
@@ -95,12 +89,12 @@ public class User {
             	String[] lines = input.split("[\\r\\n]");
 	          	if(lines.length > 1) {
 	          		String noMac = lines[0];
-	                res = lines[1];
+	              res = lines[1];
 	          		if(lines.length > 2) {
 	          			int num = noMac.length() + 1;
 	          			res = input.substring(num);
 	          		}
-	                  res = keyGen.getDecodedMessage(res, noMac);
+	              res = keyGen.getDecodedMessage(res, noMac);
 	          	} else {
 	          		res = input;
 	          	}
@@ -240,7 +234,7 @@ public class User {
       String repeatedPassword = console.nextLine();
       if(potentialPassword.equals(repeatedPassword)){
         password = potentialPassword;
-        
+
         Classify classifier = new Classify();
         String classify = classifier.evaluatePassword(password);
         System.out.println("Password strength: " + classify);
@@ -271,11 +265,15 @@ public class User {
       username = console.nextLine();
       System.out.print("Enter password: ");
       password = console.nextLine();
-      // creates new public and private keys, creates keyGen to encrypt and decrypt
       keyGen = new KeyGen(username, password, "2", serverKey);
-      // key transport message includes login message as well
       keyTransportMsg = keyGen.getKeyTransportMsg();
-      //System.out.println(keyTransportMsg);
+      streamOut.writeUTF(keyTransportMsg);
+      streamOut.flush();
+    }
+
+    private void wrongInput() throws Exception {
+      keyGen = new KeyGen("admin", "admin", "3", serverKey);
+      keyTransportMsg = keyGen.getKeyTransportMsg();
       streamOut.writeUTF(keyTransportMsg);
       streamOut.flush();
     }
