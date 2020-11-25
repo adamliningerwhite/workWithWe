@@ -160,12 +160,12 @@ public class ServerHandler extends Thread {
 		else
 			rejectList = rejectList.substring(0, rejectList.length() - 2);
 		System.out.println(rejectList);
-		System.out.println("Status: " + status);
-		String onlineFriends = "Online friends: ";
+		System.out.println("Your status: " + status);
+		String onlineFriends = "Friends working now: ";
 		for(String on : online)
 			onlineFriends += on + ", ";
 		if(online.size() == 0)
-			onlineFriends = "You have no friends online";
+			onlineFriends = "None of your friends are working right now. ";
 		else
 			onlineFriends = onlineFriends.substring(0, onlineFriends.length() - 2);
 		System.out.println(onlineFriends);
