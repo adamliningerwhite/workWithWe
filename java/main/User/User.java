@@ -50,7 +50,7 @@ public class User {
               String keyString = streamIn.readUTF();
               String hashedKeyString = hashFunction(keyString, "Server");
               
-              if(!trustedPublicKeys.get(keyString).equals(hashedKeyString)) {
+              if(!trustedPublicKeys.containsKey(keyString) || !trustedPublicKeys.get(keyString).equals(hashedKeyString)) {
             	  System.out.println("Error: public key not trusted, closing connection");
             	  streamOut.writeUTF("closing connection");
                   console.close();
@@ -60,6 +60,7 @@ public class User {
                   System.exit(0);
               }
               
+              System.out.println("Server public key authenticated");
               streamOut.writeUTF("confirmed");
               byte[] pubKeyBytes = decoder.decode(keyString);
               
