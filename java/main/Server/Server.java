@@ -57,16 +57,23 @@ public class Server {
 				s = mainServer.accept();
 				dis = new DataInputStream(s.getInputStream());
 				dos = new DataOutputStream(s.getOutputStream());
-
+				encryptHelper = new EncryptHelper();
+				
 				//TODO: "certificate" workaround sending public key
 				if (first) {
-					dos.writeUTF("../Server/ServerKeys/serverpublic.key");
+					String pubKeyString = encryptHelper.getPublicKeyString();
+					dos.writeUTF(pubKeyString);
 					dos.flush();
 					first = false;
+					
+					String confirm = dis.readUTF();
+					if(confirm.equals("closing connection")) {
+						first = true;
+		                continue;
+					}
 				}
 				String transport = dis.readUTF();
 				//System.out.println(transport);
-				encryptHelper = new EncryptHelper();
 				encryptHelper.decryptKeyTransport(transport);
 
 
