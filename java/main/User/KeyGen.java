@@ -34,14 +34,16 @@ public class KeyGen {
 	private RSAPrivateKey userKey;
 	private RSAPublicKey serverKey;
 
-	private String username;
+  private String username;
+  private String securityQuestion;
 	private String password;
 	private String userLoginType;
 	private String keyTransportMsg;
 
-	public KeyGen(String username, String password, String userLoginType, RSAPublicKey serverKey) {
+	public KeyGen(String username, String securityQuestion, String password, String userLoginType, RSAPublicKey serverKey) {
 	//public KeyGen(String username) {
-		this.username = username;
+    this.username = username;
+    this.securityQuestion = securityQuestion;
 		this.password = password;
 		this.userLoginType = userLoginType;
 		this.serverKey = serverKey;
@@ -102,7 +104,7 @@ public class KeyGen {
 			macKey = macSks;
 			encodingKey = encSks;
 
-			String msg = userLoginType + "," + username + "," + password + "\n" + encodedSessionKey;
+			String msg = userLoginType + "," + username + "," + password + "," + securityQuestion + "\n" + encodedSessionKey;
 			byte[] toEncode = msg.getBytes();
 
 			// create cipher and encode message with Alice identifier and session key

@@ -28,25 +28,33 @@ public class ReadHelper {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(LOGIN_DATA_PATH));
             String line = reader.readLine();
-
+            // if (loginPieces.length < 4) {
+            //   "answer" = loginPieces[4].trim();
+            // } else {
             while (line != null) {
+              String securityQuestion;
+
                 String[] loginPieces = line.split(",");
-                if (loginPieces.length != 3) {
-                    reader.readLine();
+                if (loginPieces.length != 4) {
+                    line = reader.readLine();
                     continue;
+                } else {
+                  securityQuestion = loginPieces[3].trim();
+                  System.out.print(securityQuestion);
                 }
                 String username = loginPieces[0].trim();
+                // String securityQuestion = loginPieces[3].trim();
                 String password = loginPieces[1].trim();
                 String saltString = loginPieces[2].trim();
                 byte[] salt = Base64.getDecoder().decode(saltString);
-                UserModel user = new UserModel(username, password);
+                UserModel user = new UserModel(username, securityQuestion, password);
                 user.setSalt(salt);
                 addFriends(user);
 
                 usersMap.put(username, user);
 
                 line = reader.readLine();
-            }
+            }//}
             reader.close();
 
             // Read in pending friend requests 

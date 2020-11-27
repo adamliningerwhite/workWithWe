@@ -21,7 +21,7 @@ public class WriteHelper {
             PrintWriter userWriter;
             for (UserModel user : userMap.values()) {
             	String salt = Base64.getEncoder().encodeToString(user.getSalt());
-                loginWriter.println(user.getUsername() + "," + user.getPassword() + "," + salt);
+                loginWriter.println(user.getUsername() + "," + user.getPassword() + "," + salt + "," + user.getSecurityQuestion());
                 try {
                     userWriter = new PrintWriter(new BufferedWriter(new FileWriter(DATA_PATH + user.getUsername() + ".txt")));
                     for (String friend : user.getFriends()) {

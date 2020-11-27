@@ -6,6 +6,7 @@ public class UserModel {
 
     private String username;
     private String password;
+    private String securityQuestion;
     private byte[] salt;
     private List<String> friends;
     private SecretKey sessionKey;
@@ -21,8 +22,9 @@ public class UserModel {
 
    // private RSAPublicKey publicKey;
 
-    public UserModel(String username, String password) {
+    public UserModel(String username, String securityQuestion, String password) {
         this.username = username;
+        this.securityQuestion = securityQuestion;
         this.password = password;
         this.encHelper = null;
         this.friends = new ArrayList<String>();
@@ -39,6 +41,14 @@ public class UserModel {
 
     public void setUsername(String newName) {
         this.username = newName;
+    }
+
+    public String getSecurityQuestion() {
+      return this.securityQuestion;
+    }
+
+    public void setSecurityQuestion(String securityQuestion){
+      this.securityQuestion = securityQuestion;
     }
 
     public String getPassword() {
@@ -59,6 +69,10 @@ public class UserModel {
     
     public boolean checkPassword(String pass) {
       return password.equals(pass);
+    }
+
+    public boolean checkSecurityQuestion(String question) {
+      return securityQuestion.equals(question);
     }
 
     public List<String> getFriends() {

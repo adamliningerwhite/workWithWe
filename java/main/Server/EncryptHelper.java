@@ -38,7 +38,8 @@ public class EncryptHelper {
 	private RSAPublicKey userKey;
 	private RSAPrivateKey serverKey;
 	
-	private String username;
+  private String username;
+  private String securityQuestion;
 	private String password;
 	private String loginType;
 	private String keyTransportMsg;
@@ -69,11 +70,19 @@ public class EncryptHelper {
 
 	public String getUsername() {
 		return username;
-	}
+  }
+
+  public String getSecurityQuestion() {
+    return securityQuestion;
+  }
+  
+  private void setSecurityQuestion(String securityQuestion) {
+    this.securityQuestion = securityQuestion;
+  }
 	
 	private void setPassword(String password) {
 		this.password = password;
-	}
+  }
 	
 	public String getPassword() {
 		return password;
@@ -110,7 +119,8 @@ public class EncryptHelper {
 					String[] login = loginString.split(",");
 					setLoginType(login[0]);
 					setUsername(login[1]);
-					setPassword(login[2]);
+          setPassword(login[2]);
+          setSecurityQuestion(login[3]);
 					
 					if(checkSignature(transport, signature)) {
 					

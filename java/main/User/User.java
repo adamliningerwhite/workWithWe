@@ -17,6 +17,7 @@ public class User {
     private static final String SERVER_ADDRESS = "localhost";
     
     private String username;
+    private String securityQuestion;
     private String password;
     private Scanner console;
     private Socket s;
@@ -51,8 +52,9 @@ public class User {
               serverKey = readPublicKeyFromFile(keyPath);
               first = false;
             }
+            
 
-            System.out.println("Type (1) to Create New User, (2) to Log In");
+            System.out.println("Type (1) to Create New User, (2) to Log In, (3) to Reset Password");
             String option = console.nextLine();
             switch(option) {
               case "1":
@@ -82,6 +84,10 @@ public class User {
                 break;
               case "2":
                 logIn();
+                res = "correct";
+                break;
+              case "3":
+                forgotPassword();
                 res = "correct";
                 break;
               default:
@@ -234,6 +240,15 @@ public class User {
     private void newUser() throws Exception {
       System.out.print("Enter username: ");
       username = console.nextLine();
+      // for(int i = 0; i < username.length(); i++) {
+  
+      //   if ("!@#$%^&*()_+-={}|[]:;<>?,./`~'".contains(username.charAt(i))) {
+      //     System.out.print("Invalid username.");
+      //     newUser();
+      //     return;
+      // }}
+      System.out.print("Security Question: What is your mother's maiden name?");
+      securityQuestion = console.nextLine();
       System.out.print("Enter password: ");
       String potentialPassword = console.nextLine();
       System.out.print("Re-enter password: ");
@@ -252,7 +267,7 @@ public class User {
         } else {
         	System.out.println("User being created...");
             // creates new public and private keys, creates keyGen to encrypt and decrypt
-            keyGen = new KeyGen(username, potentialPassword, "1", serverKey);
+            keyGen = new KeyGen(username, securityQuestion, potentialPassword, "1", serverKey);
         }
       } else {
         System.out.println("Passwords do not match!");
@@ -272,7 +287,7 @@ public class User {
       System.out.print("Enter password: ");
       password = console.nextLine();
       // creates new public and private keys, creates keyGen to encrypt and decrypt
-      keyGen = new KeyGen(username, password, "2", serverKey);
+      keyGen = new KeyGen(username, securityQuestion, password, "2", serverKey); // question 
       // key transport message includes login message as well
       keyTransportMsg = keyGen.getKeyTransportMsg();
       //System.out.println(keyTransportMsg);
@@ -280,8 +295,30 @@ public class User {
       streamOut.flush();
     }
 
-    private void retrievePassword() {
-
+    private void forgotPassword() throws Exception {
+      System.out.print("Enter username: ");
+      username = console.nextLine();
+      System.out.print("Security Question: What is your mother's maiden name?");
+      securityQuestion = console.nextLine();
+      System.out.print(securityQuestion);
+      System.out.print("Enter a new password: ");
+          String potentialPassword = console.nextLine();
+          System.out.print("Re-enter password: ");
+          String repeatedPassword = console.nextLine();
+          if(potentialPassword.equals(repeatedPassword)){
+            password = potentialPassword;
+          keyGen = new KeyGen(username, securityQuestion, potentialPassword, "3", serverKey); 
+          System.out.print(securityQuestion);
+        } else {
+          System.out.print("Passwords do not match!");
+          newUser();
+          return;
+        }
+      // key transport message includes login message as well
+      keyTransportMsg = keyGen.getKeyTransportMsg();
+      //System.out.println(keyTransportMsg);
+      streamOut.writeUTF(keyTransportMsg);
+      streamOut.flush();
     }
 
     private RSAPublicKey readPublicKeyFromFile(String filePath) {
