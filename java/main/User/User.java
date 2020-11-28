@@ -362,20 +362,18 @@ public class User {
       username = console.nextLine();
       System.out.print("Security Question: What is your mother's maiden name? ");
       securityQuestion = console.nextLine();
-      System.out.print(securityQuestion);
       System.out.print("Enter a new password: ");
-          String potentialPassword = console.nextLine();
-          System.out.print("Re-enter password: ");
-          String repeatedPassword = console.nextLine();
-          if(potentialPassword.equals(repeatedPassword)){
-            password = potentialPassword;
-          keyGen = new KeyGen(username, securityQuestion, potentialPassword, "3", serverKey);
-          System.out.print(securityQuestion);
-        } else {
-          System.out.print("Passwords do not match!");
-          newUser();
-          return;
-        }
+      String potentialPassword = console.nextLine();
+      System.out.print("Re-enter password: ");
+      String repeatedPassword = console.nextLine();
+      if(potentialPassword.equals(repeatedPassword)){
+        password = potentialPassword;
+	      keyGen = new KeyGen(username, securityQuestion, potentialPassword, "3", serverKey);
+      } else {
+        System.out.print("Passwords do not match!");
+        newUser();
+        return;
+      }
       // key transport message includes login message as well
       keyTransportMsg = keyGen.getKeyTransportMsg();
       //System.out.println(keyTransportMsg);
