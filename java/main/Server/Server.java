@@ -3,12 +3,18 @@ import java.text.*;
 import java.util.*;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyFactory;
+import java.security.SecureRandom;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 public class Server {
@@ -17,7 +23,9 @@ public class Server {
 	public static Base64.Decoder decoder = Base64.getDecoder();
 
 	private static final int USER_LISTEN_PORT = 4232;
-	private static final int MESSAGE_LISTEN_PORT = 4771;
+
+	private static final String ADMIN_PASSWORD = "teamwork makes the dream work";
+	private static final String SALT_PATH = "salt";
 
 	private List<UserHandler> onlineUsers = new ArrayList<UserHandler>();
 	private List<String> takenUsernames = new ArrayList<String>();
@@ -30,8 +38,8 @@ public class Server {
 	private DataInputStream dis;
 	private DataOutputStream dos;
 	private String option;
-  private String username;
-  private String securityQuestion;
+  	private String username;
+  	private String securityQuestion;
 	private String password;
 	private Socket s = null;
 
@@ -43,14 +51,44 @@ public class Server {
 
 		/* Start workWithMe server */
 		System.out.println("Started WorkWithMe Server");
+
+		/* PBE scheme */
+		// Step 1: require administrator password  
+		Scanner console = new Scanner(System.in);
+		System.out.print("Administrator password: ");
+		String adminPassword = console.nextLine().trim();
+		// Step 2: ensure user entered correct password 
+		if (!adminPassword.equals(ADMIN_PASSWORD)) {
+			System.out.println("Incorrect password...killing application!");
+			System.exit(0);
+		}
+		System.out.println("Authentication successful");
+		// Step 3: generate secret key from password
+		byte[] salt = new byte[8];
+		try { // attempt to read salt from file 
+			FileInputStream saltReader = new FileInputStream(SALT_PATH);
+			saltReader.read(salt);
+		} catch (Exception e) { // if none exists, make one from scratch and write for next time
+			System.out.println("No existing salt, creating one from scratch.");
+			SecureRandom random = new SecureRandom();
+			random.nextBytes(salt);
+			FileOutputStream saltWriter = new FileOutputStream(SALT_PATH);
+			saltWriter.write(salt);
+		}
+		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+		KeySpec spec = new PBEKeySpec(adminPassword.toCharArray(), salt, 65536, 256);
+		SecretKey tmp = factory.generateSecret(spec);
+		SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+
 		ServerSocket mainServer = new ServerSocket(USER_LISTEN_PORT);
 
-		ReadHelper userDataReader = new ReadHelper();
+		ReadHelper userDataReader = new ReadHelper(secret);
 
 		userMap = userDataReader.readData();
 		getTakenUsernames();
 
-		WriterThread userDataWriter = new WriterThread(this);
+		WriterThread userDataWriter = new WriterThread(this, secret);
 
 		/* infinite loop to accept user connections */
 		while (true) {
@@ -80,8 +118,8 @@ public class Server {
 
 				option = encryptHelper.getLoginType();
 				username = encryptHelper.getUsername();
-        password = encryptHelper.getPassword();
-        securityQuestion = encryptHelper.getSecurityQuestion();
+				password = encryptHelper.getPassword();
+				securityQuestion = encryptHelper.getSecurityQuestion();
 
 				switch (option) {
 				case "1":

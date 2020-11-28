@@ -2,8 +2,14 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.Buffer;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+
 import java.util.ArrayList;
 import java.util.Base64;
 
@@ -13,6 +19,13 @@ public class ReadHelper {
     private static final String LOGIN_DATA_PATH = DATA_PATH + "login.txt";
     private static final String PENDING_REQUEST_PATH = DATA_PATH + "pending_requests.txt";
 
+	public static Base64.Decoder decoder = Base64.getDecoder();
+
+    private SecretKey decryptKey;
+
+    public ReadHelper(SecretKey decryptKey) {
+        this.decryptKey = decryptKey;
+    }
     /**
      * 
      * A method that reads in stored data to "remember" prior users and 
@@ -40,7 +53,6 @@ public class ReadHelper {
                     continue;
                 } else {
                   securityQuestion = loginPieces[3].trim();
-                  System.out.print(securityQuestion);
                 }
                 String username = loginPieces[0].trim();
                 // String securityQuestion = loginPieces[3].trim();
@@ -59,18 +71,22 @@ public class ReadHelper {
 
             // Read in pending friend requests 
             reader = new BufferedReader(new FileReader(PENDING_REQUEST_PATH));
-            line = reader.readLine();
-            while(line != null) {
-                String[] requestPieces = line.split(",");
-                if(requestPieces.length != 2) {
-                    line = reader.readLine();
-                    continue;
+            String encryptedLine = reader.readLine();
+            while(encryptedLine != null) {
+                try {
+                    line = decrypt(encryptedLine);
+                    String[] requestPieces = line.split(",");
+                    if(requestPieces.length != 2) {
+                        encryptedLine = reader.readLine();
+                        continue;
+                    }
+                    String recipient = requestPieces[0];
+                    String originator = requestPieces[1];
+                    usersMap.get(recipient).addFriendRequest(originator);
+                } catch (Exception e) {
+                    System.out.println("Error decrypting text from pending_request file");
                 }
-                String recipient = requestPieces[0];
-                String originator = requestPieces[1];
-                usersMap.get(recipient).addFriendRequest(originator);
-                
-                line = reader.readLine();
+                encryptedLine = reader.readLine();
             }
             reader.close(); 
 
@@ -85,14 +101,27 @@ public class ReadHelper {
         String path = DATA_PATH + user.getUsername() + ".txt";
         try {
             BufferedReader reader = new BufferedReader(new FileReader(path));
-            String line = reader.readLine();
-            while (line != null) {
-                user.addFriend(line.trim());
-                line = reader.readLine();
+            String encryptedLine = reader.readLine();
+            while (encryptedLine != null) {
+                try {
+                    String line = decrypt(encryptedLine);
+                    user.addFriend(line.trim());
+                } catch (Exception e) {
+                    System.out.println("Error decrypting text from " + user.getUsername() + "'s text file");
+                }
+                encryptedLine = reader.readLine();
             }
             reader.close();
         } catch (IOException e) {
             user.setFriends(new ArrayList<String>());
         }
     }
+
+    private String decrypt(String cipherText) throws IOException, GeneralSecurityException {
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	    IvParameterSpec ivspec = new IvParameterSpec(iv);
+		cipher.init(Cipher.DECRYPT_MODE, decryptKey, ivspec);
+		return new String(cipher.doFinal(decoder.decode(cipherText)), "UTF-8");
+	}
 }

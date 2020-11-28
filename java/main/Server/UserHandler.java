@@ -133,7 +133,10 @@ public class UserHandler extends Thread {
         msg = "Error: cannot add yourself as a friend."; 
       }
       else if (potentialFriend.getFriendRequests().contains(this.username)) {
-        msg = "Error: you already have a pending friend request for this user.";
+        msg = "Error: the friend request you previously sent is still pending.";
+      }
+      else if (userModel.getFriendRequests().contains(friend)) {
+        msg = "Error: you already have a pending friend request from this user. ";
       }
       // If it exists, then add to their list of pending friend requests
       else {

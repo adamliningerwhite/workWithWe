@@ -263,7 +263,7 @@ public class User {
       //     newUser();
       //     return;
       // }}
-      System.out.print("Security Question: What is your mother's maiden name?");
+      System.out.print("Security Question: What is your mother's maiden name? ");
       securityQuestion = console.nextLine();
       System.out.print("Enter password: ");
       String potentialPassword = console.nextLine();
@@ -311,7 +311,7 @@ public class User {
     }
 
     private void wrongInput() throws Exception {
-      keyGen = new KeyGen("admin", "admin", "3", serverKey);
+      keyGen = new KeyGen("admin", "admin", "admin", "3", serverKey);
       keyTransportMsg = keyGen.getKeyTransportMsg();
       streamOut.writeUTF(keyTransportMsg);
       streamOut.flush();
@@ -320,7 +320,7 @@ public class User {
     private void forgotPassword() throws Exception {
       System.out.print("Enter username: ");
       username = console.nextLine();
-      System.out.print("Security Question: What is your mother's maiden name?");
+      System.out.print("Security Question: What is your mother's maiden name? ");
       securityQuestion = console.nextLine();
       System.out.print(securityQuestion);
       System.out.print("Enter a new password: ");

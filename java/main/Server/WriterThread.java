@@ -1,11 +1,13 @@
+import javax.crypto.SecretKey;
+
 public class WriterThread extends Thread {
 
     WriteHelper writer;
     Server server;
 
-    public WriterThread(Server server) {
+    public WriterThread(Server server, SecretKey encryptKey) {
         this.server = server;
-        writer = new WriteHelper();
+        writer = new WriteHelper(encryptKey);
         this.start();
     }
 
