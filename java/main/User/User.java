@@ -283,7 +283,7 @@ public class User {
     }
 
     private boolean isLegalUsername(String username) {
-      String illegalChars = "!@#$%^&*()_+-={}|[]:;<>?,./`~'\\";
+      String illegalChars = "!@#$%^&*()_+-={} |[]:;<>?,./`~'\\";
       for(int i = 0; i < username.length(); i++) {
         if (illegalChars.indexOf(username.charAt(i)) >= 0) {
           return false;
