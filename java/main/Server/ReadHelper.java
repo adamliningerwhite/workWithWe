@@ -27,14 +27,14 @@ public class ReadHelper {
         this.decryptKey = decryptKey;
     }
     /**
-     * 
-     * A method that reads in stored data to "remember" prior users and 
-     * store their information in a list of UserModel objects. 
-     * 
+     *
+     * A method that reads in stored data to "remember" prior users and
+     * store their information in a list of UserModel objects.
+     *
      * This list will change as people create and delete accounts, add new friends,
      * or change usernames and passwords. For this reason, we only call this method once.
-     * 
-     * @return the list of workWithMe Users 
+     *
+     * @return the list of workWithMe Users
      */
     public HashMap<String, UserModel> readData() {
         HashMap<String, UserModel> usersMap = new HashMap<String, UserModel>();
@@ -45,21 +45,19 @@ public class ReadHelper {
             //   "answer" = loginPieces[4].trim();
             // } else {
             while (line != null) {
-              String securityQuestion;
-
                 String[] loginPieces = line.split(",");
-                if (loginPieces.length != 4) {
+                if (loginPieces.length < 4) {
                     line = reader.readLine();
                     continue;
-                } else {
-                  securityQuestion = loginPieces[3].trim();
                 }
                 String username = loginPieces[0].trim();
-                // String securityQuestion = loginPieces[3].trim();
                 String password = loginPieces[1].trim();
                 String saltString = loginPieces[2].trim();
+                String securityQuestion = loginPieces[3].trim();
+                String attempts = loginPieces[4].trim();
+                int incorrectAttempts = Integer.parseInt(attempts);
                 byte[] salt = Base64.getDecoder().decode(saltString);
-                UserModel user = new UserModel(username, securityQuestion, password);
+                UserModel user = new UserModel(username, securityQuestion, password, incorrectAttempts);
                 user.setSalt(salt);
                 addFriends(user);
                 addBlockedUsers(user);
@@ -70,7 +68,7 @@ public class ReadHelper {
             }//}
             reader.close();
 
-            // Read in pending friend requests 
+            // Read in pending friend requests
             reader = new BufferedReader(new FileReader(PENDING_REQUEST_PATH));
             String encryptedLine = reader.readLine();
             while(encryptedLine != null) {
@@ -89,11 +87,11 @@ public class ReadHelper {
                 }
                 encryptedLine = reader.readLine();
             }
-            reader.close(); 
+            reader.close();
 
         } catch (IOException e) {
             e.printStackTrace();
-        } 
+        }
 
         return usersMap;
     }
@@ -133,7 +131,7 @@ public class ReadHelper {
             }
             reader.close();
         } catch (IOException e) {
-            e.printStackTrace();    
+            e.printStackTrace();
         }
     }
 

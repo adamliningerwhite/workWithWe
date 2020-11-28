@@ -36,7 +36,7 @@ public class WriteHelper {
             PrintWriter blockedUserWriter;
             for (UserModel user : userMap.values()) {
             	String salt = Base64.getEncoder().encodeToString(user.getSalt());
-                loginWriter.println(user.getUsername() + "," + user.getPassword() + "," + salt + "," + user.getSecurityQuestion());
+                loginWriter.println(user.getUsername() + "," + user.getPassword() + "," + salt + "," + user.getSecurityQuestion() + "," + user.getIncorrectAttempts());
                 try {
                     // Write friends list to file
                     userWriter = new PrintWriter(new BufferedWriter(new FileWriter(DATA_PATH + user.getUsername() + ".txt")));
@@ -64,7 +64,7 @@ public class WriteHelper {
                     e.printStackTrace();
                 }
 
-                // add their pending friend requests to file 
+                // add their pending friend requests to file
                 pendingRequestWriter.flush();
                 for (String pendingFriend : user.getFriendRequests()) {
                     String recipient = user.getUsername();

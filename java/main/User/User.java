@@ -17,7 +17,7 @@ public class User {
     private static final HashMap<String, String> trustedPublicKeys = new HashMap<String, String>();
     private static final String KEY_STRING = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrUTFKJLC+nrh5KoH9fj26IudBglTvf94rWyrkNgs42Cy6qx0j4jzdaFdqFn51AIQYRsD/074Rr3tLK52PBTgwD7TA9DWHprK0qW6RCEtCnQ++74J29JVmtWx+XhT4QwATPHQyv04n1ZgnDuVvg2aOFFLQrsfyegNmx2ia19E57wIDAQAB";
     private static final String HASHED_KEY_STRING = "9d50a5aecf355bb7957d94b12a9916980dcfa42a8f7b728cb2261bff896eb5aacab51e966bb10615ef443159acf275e975df89389f310814763c937060f9a23b";
-    
+
     private String username;
     private String securityQuestion;
     private String password;
@@ -46,11 +46,11 @@ public class User {
             streamOut = new DataOutputStream(s.getOutputStream());
             streamIn = new DataInputStream(s.getInputStream());
             System.out.println("Connected to Server");
-            
+
             if(first){
               String keyString = streamIn.readUTF();
               String hashedKeyString = hashFunction(keyString, "Server");
-              
+
               if(!trustedPublicKeys.containsKey(keyString) || !trustedPublicKeys.get(keyString).equals(hashedKeyString)) {
             	  System.out.println("Error: public key not trusted, closing connection");
             	  streamOut.writeUTF("closing connection");
@@ -60,17 +60,17 @@ public class User {
                   s.close();
                   System.exit(0);
               }
-              
+
               System.out.println("Server public key authenticated");
               streamOut.writeUTF("confirmed");
               byte[] pubKeyBytes = decoder.decode(keyString);
-              
+
               KeyFactory kf = KeyFactory.getInstance("RSA");
               X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pubKeyBytes);
               serverKey = (RSAPublicKey) kf.generatePublic(keySpec);
               first = false;
             }
-            
+
 
             System.out.println("Type (1) to Create New User, (2) to Log In, (3) to Reset Password");
             String option = console.nextLine();
@@ -111,6 +111,10 @@ public class User {
                 res = "incorrect";
                 break;
             }
+						if(res.contains("Locked out")){
+							System.out.println("Too many incorrect password attempts!");
+							forgotPassword();
+						}
             /* Recieve acknowledgement from server */
             if(res != "incorrect") {
             	String input = streamIn.readUTF();
@@ -151,7 +155,7 @@ public class User {
                     friendRequest();
                     break;
                   case "4":
-                    removeFriend(); 
+                    removeFriend();
                     break;
                   case "5":
                     flipStatus();
@@ -164,7 +168,8 @@ public class User {
                     break;
                 }
 	            }
-            } else {
+						}
+						 else {
               createUser();
             }
         }
@@ -226,7 +231,7 @@ public class User {
       sendMessage(msg);
       receiverServerMessage();
     }
-    
+
     private void flipStatus() throws Exception {
       String msg = "5,";
       sendMessage(msg);
@@ -338,7 +343,7 @@ public class User {
       System.out.print("Enter password: ");
       password = console.nextLine();
       // creates new public and private keys, creates keyGen to encrypt and decrypt
-      keyGen = new KeyGen(username, securityQuestion, password, "2", serverKey); // question 
+      keyGen = new KeyGen(username, securityQuestion, password, "2", serverKey); // question
       // key transport message includes login message as well
       keyTransportMsg = keyGen.getKeyTransportMsg();
       streamOut.writeUTF(keyTransportMsg);
@@ -364,7 +369,7 @@ public class User {
           String repeatedPassword = console.nextLine();
           if(potentialPassword.equals(repeatedPassword)){
             password = potentialPassword;
-          keyGen = new KeyGen(username, securityQuestion, potentialPassword, "3", serverKey); 
+          keyGen = new KeyGen(username, securityQuestion, potentialPassword, "3", serverKey);
           System.out.print(securityQuestion);
         } else {
           System.out.print("Passwords do not match!");
@@ -377,7 +382,7 @@ public class User {
       streamOut.writeUTF(keyTransportMsg);
       streamOut.flush();
     }
-    
+
     private String hashFunction(String input, String concat) throws NoSuchAlgorithmException {
 		 // getInstance() method is called with algorithm SHA-512
       MessageDigest md = MessageDigest.getInstance("SHA-512");

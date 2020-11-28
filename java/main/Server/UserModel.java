@@ -14,6 +14,7 @@ public class UserModel {
     private SecretKey macKey;
     private EncryptHelper encHelper;
     private boolean working;
+    private int incorrectAttempts;
 
     private List<String> friendsOnline;
     private List<String> pendingFriendRequests;
@@ -35,7 +36,39 @@ public class UserModel {
         this.acceptedRequests = new ArrayList<String>();
         this.rejectedRequests = new ArrayList<String>();
         this.blockedUsers = new ArrayList<String>();
+        incorrectAttempts = 0;
         working = false;
+    }
+
+    public UserModel(String username, String securityQuestion, String password, int incorrectAttempts) {
+        this.username = username;
+        this.securityQuestion = securityQuestion;
+        this.password = password;
+        this.encHelper = null;
+        this.friends = new ArrayList<String>();
+        this.friendsOnline = new ArrayList<String>();
+        this.pendingFriendRequests = new ArrayList<String>();
+        this.acceptedRequests = new ArrayList<String>();
+        this.rejectedRequests = new ArrayList<String>();
+        this.blockedUsers = new ArrayList<String>();
+        this.incorrectAttempts =  incorrectAttempts;
+        working = false;
+    }
+
+    public int getIncorrectAttempts() {
+      return incorrectAttempts;
+    }
+
+    public void resetIncorrectAttempts() {
+      incorrectAttempts = 0;
+    }
+
+    public void setIncorrectAttempts(int attempts) {
+      incorrectAttempts = attempts;
+    }
+
+    public void incrementIncorrectAttempts() {
+      incorrectAttempts++;
     }
 
     public String getUsername() {
@@ -61,7 +94,7 @@ public class UserModel {
     public void setPassword(String newPass) {
         this.password = newPass;
     }
-    
+
     public byte[] getSalt() {
     	return this.salt;
     }
@@ -69,7 +102,7 @@ public class UserModel {
     public void setSalt(byte[] salt) {
     	this.salt = salt;
     }
-    
+
     public boolean checkPassword(String pass) {
       return password.equals(pass);
     }
@@ -200,7 +233,7 @@ public class UserModel {
     }
     public List<String> getBlockedUsers() {
         return blockedUsers;
-    } 
+    }
     public void removeBlockedUser(String user) {
         blockedUsers.remove(user);
     }

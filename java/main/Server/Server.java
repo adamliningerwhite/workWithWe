@@ -53,11 +53,11 @@ public class Server {
 		System.out.println("Started WorkWithMe Server");
 
 		/* PBE scheme */
-		// Step 1: require administrator password  
+		// Step 1: require administrator password
 		Scanner console = new Scanner(System.in);
 		System.out.print("Administrator password: ");
 		String adminPassword = console.nextLine().trim();
-		// Step 2: ensure user entered correct password 
+		// Step 2: ensure user entered correct password
 		if (!adminPassword.equals(ADMIN_PASSWORD)) {
 			System.out.println("Incorrect password...killing application!");
 			System.exit(0);
@@ -65,7 +65,7 @@ public class Server {
 		System.out.println("Authentication successful");
 		// Step 3: generate secret key from password
 		byte[] salt = new byte[8];
-		try { // attempt to read salt from file 
+		try { // attempt to read salt from file
 			FileInputStream saltReader = new FileInputStream(SALT_PATH);
 			saltReader.read(salt);
 		} catch (Exception e) { // if none exists, make one from scratch and write for next time
@@ -97,14 +97,14 @@ public class Server {
 				dis = new DataInputStream(s.getInputStream());
 				dos = new DataOutputStream(s.getOutputStream());
 				encryptHelper = new EncryptHelper();
-				
+
 				//TODO: "certificate" workaround sending public key
 				if (first) {
 					String pubKeyString = encryptHelper.getPublicKeyString();
 					dos.writeUTF(pubKeyString);
 					dos.flush();
 					first = false;
-					
+
 					String confirm = dis.readUTF();
 					if(confirm.equals("closing connection")) {
 						first = true;
@@ -142,7 +142,6 @@ public class Server {
           break;
 				default:
 					System.out.println("Incorrect input!");
-
 					break;
 				}
 			} catch (Exception e) {
@@ -190,49 +189,57 @@ public class Server {
 
 	private boolean logIn() throws Exception {
 		UserModel currentUser = userMap.get(username);
-		if(currentUser != null) {
-			byte[] salt = currentUser.getSalt();
-			password = encryptHelper.hashPassword(password, salt);
-		}
-
-		if (currentUser == null) {
-			String msg = "the username " + username + " does not exist";
-			String noMac = encryptHelper.createEncoded(msg);
-			msg = encryptHelper.createEncodedMessage(msg);
-            msg = noMac + '\n' + msg;
-			dos.writeUTF(msg);
-			return false;
-		} else if (usernames.contains(username)) {
-			String msg = "username is currently logged in";
-			String noMac = encryptHelper.createEncoded(msg);
-			msg = encryptHelper.createEncodedMessage(msg);
-            msg = noMac + '\n' + msg;
-			dos.writeUTF(msg);
-			return false;
-		} else if (!currentUser.checkPassword(password)) {
-			String msg = "incorrect password";
-			String noMac = encryptHelper.createEncoded(msg);
-			msg = encryptHelper.createEncodedMessage(msg);
-            msg = noMac + '\n' + msg;
-			dos.writeUTF(msg);
-			return false;
+		if(currentUser.getIncorrectAttempts() < 5) {
+			if(currentUser != null) {
+				byte[] salt = currentUser.getSalt();
+				password = encryptHelper.hashPassword(password, salt);
+			}
+			if (currentUser == null) {
+				String msg = "the username " + username + " does not exist";
+				String noMac = encryptHelper.createEncoded(msg);
+				msg = encryptHelper.createEncodedMessage(msg);
+	            msg = noMac + '\n' + msg;
+				dos.writeUTF(msg);
+				return false;
+			} else if (usernames.contains(username)) {
+				String msg = "username is currently logged in";
+				String noMac = encryptHelper.createEncoded(msg);
+				msg = encryptHelper.createEncodedMessage(msg);
+	            msg = noMac + '\n' + msg;
+				dos.writeUTF(msg);
+				return false;
+			} else if (!currentUser.checkPassword(password)) {
+				String msg = "incorrect password";
+				currentUser.incrementIncorrectAttempts();
+				String noMac = encryptHelper.createEncoded(msg);
+				msg = encryptHelper.createEncodedMessage(msg);
+	            msg = noMac + '\n' + msg;
+				dos.writeUTF(msg);
+				return false;
+			} else {
+				System.out.println(username + " connected");
+				currentUser.resetIncorrectAttempts();
+				currentUser.setEncHelper(encryptHelper);
+				UserHandler t = new UserHandler(s, dis, dos, username, this, currentUser);
+				onlineUsers.add(t);
+				usernames.add(username);
+				String msg = "successfully logged in";
+				String noMac = encryptHelper.createEncoded(msg);
+				msg = encryptHelper.createEncodedMessage(msg);
+	            msg = noMac + '\n' + msg;
+				dos.writeUTF(msg);
+			}
+			dos.flush();
+			return true;
 		} else {
-			System.out.println(username + " connected");
-			currentUser.setEncHelper(encryptHelper);
-			UserHandler t = new UserHandler(s, dis, dos, username, this, currentUser);
-			onlineUsers.add(t);
-			usernames.add(username);
-
-			String msg = "successfully logged in";
+			String msg = "You are locked out! You must reset your password.";
 			String noMac = encryptHelper.createEncoded(msg);
-			msg = encryptHelper.createEncodedMessage(msg);
-            msg = noMac + '\n' + msg;
+			msg = noMac + '\n' + msg;
 			dos.writeUTF(msg);
+			return false;
 		}
-		dos.flush();
-		return true;
   }
-  
+
   private boolean forgotPassword() throws Exception {
     UserModel currentUser = userMap.get(username);
     if(currentUser != null) {
@@ -267,7 +274,7 @@ public class Server {
 			UserHandler t = new UserHandler(s, dis, dos, username, this, currentUser);
 			onlineUsers.add(t);
 			usernames.add(username);
-
+			currentUser.resetIncorrectAttempts();
 			String msg = "successfully logged in";
 			String noMac = encryptHelper.createEncoded(msg);
 			msg = encryptHelper.createEncodedMessage(msg);
