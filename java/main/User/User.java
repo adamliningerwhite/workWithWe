@@ -1,20 +1,22 @@
 import java.io.*;
+import java.math.BigInteger;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
-import java.security.PublicKey;
-import java.security.PrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
 public class User {
 
+	public static Base64.Decoder decoder = Base64.getDecoder();
     private static final int USER_SERVER_PORT = 4232;
     private static final int MESSAGE_SERVER_PORT = 4771;
     private static final String SERVER_ADDRESS = "localhost";
+    private static final HashMap<String, String> trustedPublicKeys = new HashMap<String, String>();
+    private static final String KEY_STRING = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrUTFKJLC+nrh5KoH9fj26IudBglTvf94rWyrkNgs42Cy6qx0j4jzdaFdqFn51AIQYRsD/074Rr3tLK52PBTgwD7TA9DWHprK0qW6RCEtCnQ++74J29JVmtWx+XhT4QwATPHQyv04n1ZgnDuVvg2aOFFLQrsfyegNmx2ia19E57wIDAQAB";
+    private static final String HASHED_KEY_STRING = "9d50a5aecf355bb7957d94b12a9916980dcfa42a8f7b728cb2261bff896eb5aacab51e966bb10615ef443159acf275e975df89389f310814763c937060f9a23b";
     
     private String username;
     private String securityQuestion;
@@ -25,7 +27,6 @@ public class User {
     private DataInputStream streamIn;
     private KeyGen keyGen;
     private RSAPublicKey serverKey;
-    private RSAPrivateKey userKey;
     ServerHandler handler;
     String res;
     String keyTransportMsg;
@@ -33,6 +34,7 @@ public class User {
     boolean loop = true;
 
     public User() throws Exception {
+    	trustedPublicKeys.put(KEY_STRING, HASHED_KEY_STRING);
         createUser();
     }
 
@@ -44,12 +46,28 @@ public class User {
             streamOut = new DataOutputStream(s.getOutputStream());
             streamIn = new DataInputStream(s.getInputStream());
             System.out.println("Connected to Server");
-
-            //TODO: authenticate server here and save RSAPublicKey to file "serverKey"
-            //currently just reads a key from file and saves it as the public key for the server
+            
             if(first){
-              String keyPath = streamIn.readUTF();
-              serverKey = readPublicKeyFromFile(keyPath);
+              String keyString = streamIn.readUTF();
+              String hashedKeyString = hashFunction(keyString, "Server");
+              
+              if(!trustedPublicKeys.containsKey(keyString) || !trustedPublicKeys.get(keyString).equals(hashedKeyString)) {
+            	  System.out.println("Error: public key not trusted, closing connection");
+            	  streamOut.writeUTF("closing connection");
+                  console.close();
+                  streamOut.close();
+                  streamIn.close();
+                  s.close();
+                  System.exit(0);
+              }
+              
+              System.out.println("Server public key authenticated");
+              streamOut.writeUTF("confirmed");
+              byte[] pubKeyBytes = decoder.decode(keyString);
+              
+              KeyFactory kf = KeyFactory.getInstance("RSA");
+              X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pubKeyBytes);
+              serverKey = (RSAPublicKey) kf.generatePublic(keySpec);
               first = false;
             }
             
@@ -60,27 +78,24 @@ public class User {
               case "1":
                 newUser();
                 String input = streamIn.readUTF();
-            	String[] lines = input.split("[\\r\\n]");
-	          	if(lines.length > 1) {
-	          		String noMac = lines[0];
-	                res = lines[1];
+            	  String[] lines = input.split("[\\r\\n]");
+	          	  if(lines.length > 1) {
+                  String noMac = lines[0];
+                  res = lines[1];
 	          		if(lines.length > 2) {
 	          			int num = noMac.length() + 1;
 	          			res = input.substring(num);
 	          		}
-	                res = keyGen.getDecodedMessage(res, noMac);
-	          	} else {
-	          		res = input;
-	          	}
-            
-	          	System.out.println(res);
-	          	
-	          	if(res.contains("successfully created!")) {
+	              res = keyGen.getDecodedMessage(res, noMac);
+	          	  } else {
+                  res = input;
+                }
+                System.out.println(res);
+	          	  if(res.contains("successfully created!")) {
 	          		res = "correct";
-	          	} else {
-	          		first = false;
-	          		res = "incorrect";
-	          	}
+	          	  } else {
+	          		  res = "incorrect";
+	          	  }
                 break;
               case "2":
                 logIn();
@@ -91,6 +106,7 @@ public class User {
                 res = "correct";
                 break;
               default:
+                wrongInput();
                 System.out.println("Incorrect input!");
                 res = "incorrect";
                 break;
@@ -101,12 +117,12 @@ public class User {
             	String[] lines = input.split("[\\r\\n]");
 	          	if(lines.length > 1) {
 	          		String noMac = lines[0];
-	                res = lines[1];
+	              res = lines[1];
 	          		if(lines.length > 2) {
 	          			int num = noMac.length() + 1;
 	          			res = input.substring(num);
 	          		}
-	                  res = keyGen.getDecodedMessage(res, noMac);
+	              res = keyGen.getDecodedMessage(res, noMac);
 	          	} else {
 	          		res = input;
 	          	}
@@ -255,7 +271,7 @@ public class User {
       String repeatedPassword = console.nextLine();
       if(potentialPassword.equals(repeatedPassword)){
         password = potentialPassword;
-        
+
         Classify classifier = new Classify();
         String classify = classifier.evaluatePassword(password);
         System.out.println("Password strength: " + classify);
@@ -290,7 +306,13 @@ public class User {
       keyGen = new KeyGen(username, securityQuestion, password, "2", serverKey); // question 
       // key transport message includes login message as well
       keyTransportMsg = keyGen.getKeyTransportMsg();
-      //System.out.println(keyTransportMsg);
+      streamOut.writeUTF(keyTransportMsg);
+      streamOut.flush();
+    }
+
+    private void wrongInput() throws Exception {
+      keyGen = new KeyGen("admin", "admin", "3", serverKey);
+      keyTransportMsg = keyGen.getKeyTransportMsg();
       streamOut.writeUTF(keyTransportMsg);
       streamOut.flush();
     }
@@ -320,6 +342,28 @@ public class User {
       streamOut.writeUTF(keyTransportMsg);
       streamOut.flush();
     }
+    
+    private String hashFunction(String input, String concat) throws NoSuchAlgorithmException {
+		 // getInstance() method is called with algorithm SHA-512
+      MessageDigest md = MessageDigest.getInstance("SHA-512");
+
+      // digest() method is called
+      // to calculate message digest of the input string
+      // returned as array of byte
+      byte[] messageDigest = md.digest((input+concat).getBytes());
+
+      // Convert byte array into signum representation
+      BigInteger no = new BigInteger(1, messageDigest);
+
+      // Convert message digest into hex value
+      String hashtext = no.toString(16);
+
+      // Add preceding 0s to make it 32 bit
+      while (hashtext.length() < 32) {
+          hashtext = "0" + hashtext;
+      }
+      return hashtext;
+  }
 
     private RSAPublicKey readPublicKeyFromFile(String filePath) {
       RSAPublicKey key = null;

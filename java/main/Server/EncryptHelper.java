@@ -37,6 +37,7 @@ public class EncryptHelper {
 	
 	private RSAPublicKey userKey;
 	private RSAPrivateKey serverKey;
+	public RSAPublicKey serverPublicKey;
 	
   private String username;
   private String securityQuestion;
@@ -47,12 +48,18 @@ public class EncryptHelper {
 	public EncryptHelper() {
 		try {
 			serverKey = readPrivateKeyFromFile("ServerKeys/serverprivate.key");
+			serverPublicKey = readPublicKeyFromFile("ServerKeys/serverpublic.key");
 			
 		} catch(Exception e) {
 			System.out.println("EncryptHelper not created");
 			e.printStackTrace();
 		}
 		
+	}
+	
+	public String getPublicKeyString() {
+		String encodedPublicKey = encoder.encodeToString(serverPublicKey.getEncoded());
+		return encodedPublicKey;
 	}
 	
 	/* methods to set and get username, password, and login type */

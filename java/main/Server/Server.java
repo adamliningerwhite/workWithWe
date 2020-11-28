@@ -46,7 +46,7 @@ public class Server {
 		ServerSocket mainServer = new ServerSocket(USER_LISTEN_PORT);
 
 		ReadHelper userDataReader = new ReadHelper();
-		
+
 		userMap = userDataReader.readData();
 		getTakenUsernames();
 
@@ -56,20 +56,25 @@ public class Server {
 		while (true) {
 			try {
 				s = mainServer.accept();
-
 				dis = new DataInputStream(s.getInputStream());
 				dos = new DataOutputStream(s.getOutputStream());
-
+				encryptHelper = new EncryptHelper();
+				
 				//TODO: "certificate" workaround sending public key
 				if (first) {
-					dos.writeUTF("../Server/ServerKeys/serverpublic.key");
+					String pubKeyString = encryptHelper.getPublicKeyString();
+					dos.writeUTF(pubKeyString);
 					dos.flush();
 					first = false;
+					
+					String confirm = dis.readUTF();
+					if(confirm.equals("closing connection")) {
+						first = true;
+		                continue;
+					}
 				}
-
 				String transport = dis.readUTF();
 				//System.out.println(transport);
-				encryptHelper = new EncryptHelper();
 				encryptHelper.decryptKeyTransport(transport);
 
 
@@ -122,7 +127,7 @@ public class Server {
 			takenUsernames.add(users.getKey());
 		}
 	}
-	
+
 	public HashMap<String, UserModel> getUserMap() {
 		return userMap;
 	}
@@ -151,7 +156,7 @@ public class Server {
 			byte[] salt = currentUser.getSalt();
 			password = encryptHelper.hashPassword(password, salt);
 		}
-		
+
 		if (currentUser == null) {
 			String msg = "the username " + username + " does not exist";
 			String noMac = encryptHelper.createEncoded(msg);
@@ -254,13 +259,13 @@ public class Server {
 			msg = encryptHelper.createEncodedMessage(msg);
             msg = noMac + '\n' + msg;
 			dos.writeUTF(msg);
-			
+
 			msg = username + " successfully logged in";
 			noMac = encryptHelper.createEncoded(msg);
 			msg = encryptHelper.createEncodedMessage(msg);
             msg = noMac + '\n' + msg;
 			dos.writeUTF(msg);
-			
+
 			return true;
 		} else {
 			String msg = "the username " + username + " is taken";
@@ -270,7 +275,7 @@ public class Server {
 			dos.writeUTF(msg);
 		}
 		dos.flush();
-		
+
 		return false;
 	}
 
