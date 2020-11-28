@@ -33,10 +33,12 @@ public class WriteHelper {
             PrintWriter loginWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGIN_DATA_PATH)));
             PrintWriter pendingRequestWriter = new PrintWriter(new BufferedWriter(new FileWriter(PENDING_REQUEST_PATH, false)));
             PrintWriter userWriter;
+            PrintWriter blockedUserWriter;
             for (UserModel user : userMap.values()) {
             	String salt = Base64.getEncoder().encodeToString(user.getSalt());
                 loginWriter.println(user.getUsername() + "," + user.getPassword() + "," + salt + "," + user.getSecurityQuestion());
                 try {
+                    // Write friends list to file
                     userWriter = new PrintWriter(new BufferedWriter(new FileWriter(DATA_PATH + user.getUsername() + ".txt")));
                     for (String friend : user.getFriends()) {
                         try {
@@ -47,6 +49,17 @@ public class WriteHelper {
                         }
                     }
                     userWriter.close();
+                    // Write blocked users to file
+                    blockedUserWriter = new PrintWriter(new BufferedWriter(new FileWriter(DATA_PATH + user.getUsername() + "_blocked.txt")));
+                    for (String blockedUser : user.getBlockedUsers()) {
+                        try {
+                            String encryptedBlockedUser = encrypt(blockedUser);
+                            blockedUserWriter.println(encryptedBlockedUser);
+                        } catch (Exception e) {
+                            continue;
+                        }
+                    }
+                    blockedUserWriter.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

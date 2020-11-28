@@ -71,7 +71,15 @@ public class UserHandler extends Thread {
                     }
                     break;
                   case "4":
+                    if (values.length == 2)
+                      removeFriend(values[1]); 
+                    break;
+                  case "5":
                     flipStatus();
+                    break;
+                  case "6":
+                    if (values.length == 2)
+                      blockUser(values[1]);
                     break;
                   default:
                     incorrectInput();
@@ -116,6 +124,70 @@ public class UserHandler extends Thread {
       }
     }
 
+    private void removeFriend(String friendString) throws Exception {
+      String msg;
+      // Check that this is actually one of the user's friends
+      if (!userModel.getFriends().contains(friendString)) {
+        msg = "Error: no friend with the name " + friendString;
+      } else {
+        // Get friend's user model from server 
+        UserModel friend = server.getUserMap().get(friendString);
+        // Remove friend from user's list 
+        userModel.removeFriend(friendString);
+        friend.removeFriend(this.username);
+
+        userModel.removeFriendOnline(friendString);
+        friend.removeFriendOnline(this.username);
+
+        msg = "Success! " + friendString + " is no longer your friend";
+      }
+    
+      // Send response message 
+      String noMac = encHelper.createEncoded(msg);
+      msg = encHelper.createEncodedMessage(msg);
+      msg = noMac + '\n' + msg;
+      dos.writeUTF(msg);
+      dos.flush();
+    }
+
+    private void blockUser(String blockedUserString) throws Exception {
+      String msg = "blank";
+      UserModel blockedUser = server.getUserMap().get(blockedUserString);
+
+      // Check that user exists 
+      if (blockedUser == null ) {
+        msg = "Error: no users with the name " + blockedUserString;
+      } else if (userModel.getBlockedUsers().contains(blockedUserString)) {
+        msg = "Error: user " + blockedUserString + " is already blocked";
+      } else if (blockedUserString.equals(this.username)) {
+        msg = "Error: cannot block yourself";
+      }
+      else {
+        // If friends, remove from both people's friends list
+        userModel.removeFriend(blockedUserString);
+        blockedUser.removeFriend(this.username);
+
+        // Neither party should see the other's status 
+        userModel.removeFriendOnline(blockedUserString);
+        blockedUser.removeFriendOnline(this.username);
+
+        // If pending friend requests exist, then cancel them
+        userModel.removeFriendRequest(blockedUserString);
+        blockedUser.removeFriendRequest(this.username);
+
+        // Add person to my list of blocked users
+        userModel.addBlockedUser(blockedUserString);
+
+        msg = "Success! You have blocked " + blockedUserString + ". You can unblock by sending them a friend request.";
+      }
+
+      String noMac = encHelper.createEncoded(msg);
+      msg = encHelper.createEncodedMessage(msg);
+      msg = noMac + '\n' + msg;
+      dos.writeUTF(msg);
+      dos.flush();
+    }
+
     private void requestFriend(String friend) throws Exception {
 
       System.out.println(this.username + " wants to friend request " + friend);
@@ -138,10 +210,17 @@ public class UserHandler extends Thread {
       else if (userModel.getFriendRequests().contains(friend)) {
         msg = "Error: you already have a pending friend request from this user. ";
       }
+      else if (potentialFriend.getBlockedUsers().contains(this.username)) {
+        msg = "Error: this user has blocked you from sending friend requests.";
+      }
       // If it exists, then add to their list of pending friend requests
       else {
           potentialFriend.addFriendRequest(this.username);
           msg = "Success! Friend request sent to " + friend;
+          if (userModel.getBlockedUsers().contains(friend)) {
+            userModel.removeBlockedUser(friend); // if person was blocked, then this unblocks them
+            System.out.println(this.username + " unblocked " + friend);
+          }
       }
 
       String noMac = encHelper.createEncoded(msg);
@@ -219,12 +298,25 @@ public class UserHandler extends Thread {
       }
 
       // 6th line: friends who are currently working 
+      // step 1: update the list of friends who are working 
+      HashMap<String,UserModel> userMap = server.getUserMap();
+      for (String friend : userModel.getFriends()) {
+        if (userMap.get(friend).isWorking()) {
+          userModel.addFriendOnline(friend);
+        }
+      }
       String sixthLine = "6";
       for (String friendOnline : userModel.getFriendsOnline()) {
         sixthLine += "," + friendOnline;
       }
 
-      String res = firstLine + "\n" + secondLine + "\n" + thirdLine + "\n" + fourthLine + "\n" + fifthLine + "\n" + sixthLine;
+      // 7th line : users who have been blocked 
+      String seventhLine = "7";
+      for (String blockedUser : userModel.getBlockedUsers()) {
+        seventhLine += "," + blockedUser;
+      }
+
+      String res = firstLine + "\n" + secondLine + "\n" + thirdLine + "\n" + fourthLine + "\n" + fifthLine + "\n" + sixthLine + "\n" + seventhLine;
       String noMac = encHelper.createEncoded(res);
       res = encHelper.createEncodedMessage(res);
       res = noMac + '\n' + res;

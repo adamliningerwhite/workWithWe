@@ -62,6 +62,7 @@ public class ReadHelper {
                 UserModel user = new UserModel(username, securityQuestion, password);
                 user.setSalt(salt);
                 addFriends(user);
+                addBlockedUsers(user);
 
                 usersMap.put(username, user);
 
@@ -114,6 +115,25 @@ public class ReadHelper {
             reader.close();
         } catch (IOException e) {
             user.setFriends(new ArrayList<String>());
+        }
+    }
+    private void addBlockedUsers(UserModel user) {
+        String path = DATA_PATH + user.getUsername() + "_blocked.txt";
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(path));
+            String encryptedLine = reader.readLine();
+            while (encryptedLine != null) {
+                try {
+                    String line = decrypt(encryptedLine);
+                    user.addBlockedUser(line.trim());
+                } catch (Exception e) {
+                    System.out.println("Error decrypting text from " + path);
+                }
+                encryptedLine = reader.readLine();
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();    
         }
     }
 

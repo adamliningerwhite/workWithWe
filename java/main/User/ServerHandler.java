@@ -17,6 +17,7 @@ public class ServerHandler extends Thread {
 	private HashSet<String> accepts = new HashSet<String>();
 	private HashSet<String> rejects = new HashSet<String>();
 	private HashSet<String> online = new HashSet<String>();
+	private HashSet<String> blocked = new HashSet<String>();
 	private String status = "hangin' ten";
 
 	boolean different = true;
@@ -88,6 +89,9 @@ public class ServerHandler extends Thread {
 					case "6":
 						online = compareLists(values, online);
 						break;
+					case "7":
+						blocked = compareLists(values, blocked);
+						break;
 					default:
 						break;
 				}
@@ -126,6 +130,7 @@ public class ServerHandler extends Thread {
 	}
 
 	private void results() {
+		// 1st Line: your friends 
 		String friendList = "Friend list: ";
 		for(String friend : friends)
 			friendList += friend + ", ";
@@ -134,6 +139,19 @@ public class ServerHandler extends Thread {
 		else
 			friendList = friendList.substring(0, friendList.length() - 2);
 		System.out.println(friendList);
+		
+		// 2nd Line: people you've blocked 
+		String blockedUsers = "Blocked users: ";
+		for (String blockedUser : blocked) {
+			blockedUsers += blockedUser + ", ";
+		}
+		if (blocked.size() == 0)
+			blockedUsers = "No other users are blocked";
+		else 
+			blockedUsers = blockedUsers.substring(0, blockedUsers.length() - 2);
+		System.out.println(blockedUsers);
+
+		// 3rd Line: pending friend requests from other users 
 		String pendingList = "Pending friend requests: ";
 		for(String friend : requests)
 			pendingList += friend + ", ";
@@ -142,6 +160,8 @@ public class ServerHandler extends Thread {
 		else
 			pendingList = pendingList.substring(0, pendingList.length() - 2);
 		System.out.println(pendingList);
+
+		// 4th Line: people who've accepted your friend requests
 		String acceptList = "Accepted friend requests: ";
 		for (String accept : accepts) {
 			acceptList += accept + ", ";
@@ -151,6 +171,8 @@ public class ServerHandler extends Thread {
 		else
 			acceptList = acceptList.substring(0, acceptList.length() - 2);
 		System.out.println(acceptList);
+
+		// 5th Line: people who've rejected your friend requests
 		String rejectList = "Rejected friend requests: ";
 		for (String reject : rejects) {
 			rejectList += reject + ", ";
@@ -160,7 +182,11 @@ public class ServerHandler extends Thread {
 		else
 			rejectList = rejectList.substring(0, rejectList.length() - 2);
 		System.out.println(rejectList);
+
+		// 6th Line: your status
 		System.out.println("Your status: " + status);
+
+		// 7th Line: your friends who are working now 
 		String onlineFriends = "Friends working now: ";
 		for(String on : online)
 			onlineFriends += on + ", ";

@@ -20,6 +20,8 @@ public class UserModel {
     private List<String> acceptedRequests;
     private List<String> rejectedRequests;
 
+    private List<String> blockedUsers;
+
    // private RSAPublicKey publicKey;
 
     public UserModel(String username, String securityQuestion, String password) {
@@ -32,6 +34,7 @@ public class UserModel {
         this.pendingFriendRequests = new ArrayList<String>();
         this.acceptedRequests = new ArrayList<String>();
         this.rejectedRequests = new ArrayList<String>();
+        this.blockedUsers = new ArrayList<String>();
         working = false;
     }
 
@@ -188,5 +191,17 @@ public class UserModel {
     }
     public void removeFriendOnline(String friend) {
         friendsOnline.remove(friend);
+    }
+
+    public void addBlockedUser(String user) {
+        if (!blockedUsers.contains(user)) {
+            blockedUsers.add(user);
+        }
+    }
+    public List<String> getBlockedUsers() {
+        return blockedUsers;
+    } 
+    public void removeBlockedUser(String user) {
+        blockedUsers.remove(user);
     }
 }

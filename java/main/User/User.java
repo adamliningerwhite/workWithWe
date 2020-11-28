@@ -137,7 +137,7 @@ public class User {
 	            handler = new ServerHandler(streamOut, streamIn, keyGen);
 	            Thread.sleep(5);
 	            while(loop) {
-                System.out.println("Type (1) to Logoff, (2) to add new friend, (3) to respond to friend request, (4) to flip working status");
+                System.out.println("Type (1) to Logoff, (2) to add new friend, (3) to respond to friend request, (4) to remove a friend, (5) to flip your status, (6) to block another user");
                 fromUser = console.nextLine();
                 switch (fromUser) {
                   case "1":
@@ -151,7 +151,13 @@ public class User {
                     friendRequest();
                     break;
                   case "4":
+                    removeFriend(); 
+                    break;
+                  case "5":
                     flipStatus();
+                    break;
+                  case "6":
+                    blockUser();
                     break;
                   default:
                     System.out.println("Invalid input");
@@ -212,9 +218,27 @@ public class User {
       s.close();
     }
 
-    private void flipStatus() throws Exception {
+    private void removeFriend() throws Exception {
       String msg = "4,";
+      System.out.print("Enter username of friend to remove: ");
+      String friend = console.nextLine().trim();
+      msg += friend;
       sendMessage(msg);
+      receiverServerMessage();
+    }
+    
+    private void flipStatus() throws Exception {
+      String msg = "5,";
+      sendMessage(msg);
+    }
+
+    private void blockUser() throws Exception {
+      String msg = "6,";
+      System.out.print("Enter username to block: ");
+      String blockedUser = console.nextLine().trim();
+      msg += blockedUser;
+      sendMessage(msg);
+      receiverServerMessage();
     }
 
     private void addUser() throws Exception {
@@ -253,16 +277,27 @@ public class User {
       System.out.println(msg);
     }
 
+    private boolean isLegalUsername(String username) {
+      String illegalChars = "!@#$%^&*()_+-={}|[]:;<>?,./`~'\\";
+      for(int i = 0; i < username.length(); i++) {
+        if (illegalChars.indexOf(username.charAt(i)) >= 0) {
+          return false;
+        }
+      }
+      if (username.equals("login") || username.equals("pending_requests")) {
+        return false;
+      }
+      return true;
+    }
+
     private void newUser() throws Exception {
       System.out.print("Enter username: ");
       username = console.nextLine();
-      // for(int i = 0; i < username.length(); i++) {
-  
-      //   if ("!@#$%^&*()_+-={}|[]:;<>?,./`~'".contains(username.charAt(i))) {
-      //     System.out.print("Invalid username.");
-      //     newUser();
-      //     return;
-      // }}
+      if (!isLegalUsername(username)) {
+        System.out.println("Illegal username. Special characters are not allowed.");
+        newUser();
+        return;
+      }
       System.out.print("Security Question: What is your mother's maiden name? ");
       securityQuestion = console.nextLine();
       System.out.print("Enter password: ");
