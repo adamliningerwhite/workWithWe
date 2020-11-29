@@ -11,6 +11,10 @@ public class WriterThread extends Thread {
         this.start();
     }
 
+    public void write() {
+    	writer.writeAllData(server.getUserMap());
+    }
+    
     @Override
     public void run() {
         while (true) {
