@@ -20,7 +20,7 @@ public class UserHandler extends Thread {
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param s
 	 * @param dis
 	 * @param dos
@@ -43,9 +43,16 @@ public class UserHandler extends Thread {
 		while (loop) {
 			try {
 				String msg;
-				String input = dis.readUTF();
-				String[] lines = input.split("[\\r\\n]");
-				if (lines.length > 1) {
+				String input = "";
+				String[] lines = null;
+				try{
+					input = dis.readUTF();
+					lines = input.split("[\\r\\n]");
+				} catch (Exception e){
+					logoff();
+					loop = false;
+				}
+				if (loop && lines.length > 1) {
 					String noMac = lines[0];
 					msg = lines[1];
 					if (lines.length > 2) {
@@ -59,7 +66,7 @@ public class UserHandler extends Thread {
 				}
 				if (msg.equals("online")) {
 					heartbeatResponse();
-				} else {
+				} else if (loop){
 					String[] values = msg.split(",");
 					String option = values[0];
 					switch (option) {
@@ -116,7 +123,7 @@ public class UserHandler extends Thread {
 			friendModel.removeFriendOnline(this.username);
 			friendModel.removeFriend(this.username);
 		}
-		
+
 		// remove all pending friend requests from user
 		for(Map.Entry<String, UserModel> users : server.getUserMap().entrySet()) {
 			UserModel user = users.getValue();
