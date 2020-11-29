@@ -325,14 +325,28 @@ public class User {
 			return;
 		}
 		System.out.print("Security Question: What is your mother's maiden name? ");
-		securityQuestion = console.nextLine();
+    securityQuestion = console.nextLine();
+    if (!isLegalUsername(securityQuestion)) {
+			System.out.println("Illegal answer. Special characters are not allowed.");
+			newUser();
+			return;
+		}
 		System.out.print("Enter password: ");
 		String potentialPassword = console.nextLine();
 		System.out.print("Re-enter password: ");
-		String repeatedPassword = console.nextLine();
+    String repeatedPassword = console.nextLine();
 		if (potentialPassword.equals(repeatedPassword)) {
 			password = potentialPassword;
-
+      if (password.contains(" ")) {
+        System.out.println("Illegal password. No spaces allowed.");
+        newUser();
+        return;
+      }  
+      if (password.length() > 25) {
+        System.out.println("Illegal password. Must be less than 25 characters");
+        newUser();
+        return;
+      }
 			Classify classifier = new Classify();
 			String classify = classifier.evaluatePassword(password);
 			System.out.println("Password strength: " + classify);
