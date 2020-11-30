@@ -164,7 +164,7 @@ public class User {
 					case "6":
 						blockUser();
 						break;
-					case "7": 
+					case "7":
 						deleteUser();
 						break;
 					default:
@@ -229,6 +229,9 @@ public class User {
 		String msg = "4,";
 		System.out.print("Enter username of friend to remove: ");
 		String friend = console.nextLine().trim();
+		if(friend.equals("")) {
+			friend = " ";
+		}
 		msg += friend;
 		sendMessage(msg);
 		receiverServerMessage();
@@ -256,12 +259,12 @@ public class User {
 		sendMessage(msg);
 		receiverServerMessage();
 	}
-	
-	private void deleteUser() throws Exception{
+
+	private void deleteUser() throws Exception {
 		String msg = "7,";
 		System.out.println("You are about to delete your account. Enter (1) to confirm, and (2) to cancel.");
 		String option = console.nextLine().trim();
-		if(option.equals("1")) {
+		if (option.equals("1")) {
 			loop = false;
 			System.out.println("deleting...");
 			handler.end();
@@ -304,11 +307,8 @@ public class User {
 	}
 
 	private boolean isLegalUsername(String username) {
-		String illegalChars = "!@#$%^&*()_+-={} |[]:;<>?,./`~'\\";
-		for (int i = 0; i < username.length(); i++) {
-			if (illegalChars.indexOf(username.charAt(i)) >= 0) {
-				return false;
-			}
+		if(!username.matches("[A-Za-z0-9]+")) {
+			return false;
 		}
 		if (username.equals("login") || username.equals("pending_requests")) {
 			return false;
@@ -324,9 +324,9 @@ public class User {
 			newUser();
 			return;
 		}
-		System.out.print("Security Question: What is your mother's maiden name? ");
-    securityQuestion = console.nextLine();
-    if (!isLegalUsername(securityQuestion)) {
+		System.out.print("Security Question: What is the answer to your worst dad joke? ");
+		securityQuestion = console.nextLine();
+		if (!isLegalUsername(securityQuestion)) {
 			System.out.println("Illegal answer. Special characters are not allowed.");
 			newUser();
 			return;
@@ -334,19 +334,20 @@ public class User {
 		System.out.print("Enter password: ");
 		String potentialPassword = console.nextLine();
 		System.out.print("Re-enter password: ");
-    String repeatedPassword = console.nextLine();
+		String repeatedPassword = console.nextLine();
 		if (potentialPassword.equals(repeatedPassword)) {
 			password = potentialPassword;
-      if (password.contains(" ")) {
-        System.out.println("Illegal password. No spaces allowed.");
-        newUser();
-        return;
-      }  
-      if (password.length() > 25) {
-        System.out.println("Illegal password. Must be less than 25 characters");
-        newUser();
-        return;
-      }
+			if (password.contains(" ")) {
+				System.out.println("Illegal password. Spaces are not allowed.");
+				newUser();
+				return;
+			}
+			if (password.length() > 25) {
+				System.out.println("Illegal password. Must be 25 characters or less.");
+				newUser();
+				return;
+			}
+			
 			Classify classifier = new Classify();
 			String classify = classifier.evaluatePassword(password);
 			System.out.println("Password strength: " + classify);

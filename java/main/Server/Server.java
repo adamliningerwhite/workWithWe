@@ -256,6 +256,7 @@ public class Server {
 		if (currentUser != null) {
 			byte[] salt = currentUser.getSalt();
 			password = encryptHelper.hashPassword(password, salt);
+			securityQuestion = encryptHelper.hashPassword(securityQuestion, salt);
 		}
 		if (currentUser == null) {
 			String msg = "the username " + username + " does not exist";
@@ -300,6 +301,7 @@ public class Server {
 		if (!takenUsernames.contains(username)) {
 			byte[] salt = encryptHelper.getSalt();
 			password = encryptHelper.hashPassword(password, salt);
+			securityQuestion = encryptHelper.hashPassword(securityQuestion, salt);
 			UserModel user = new UserModel(username, securityQuestion, password);
 			user.setSalt(salt);
 			user.setEncHelper(encryptHelper);
