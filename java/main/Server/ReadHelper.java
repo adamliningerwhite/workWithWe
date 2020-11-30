@@ -84,6 +84,7 @@ public class ReadHelper {
                     usersMap.get(recipient).addFriendRequest(originator);
                 } catch (Exception e) {
                     System.out.println("Error decrypting text from pending_request file");
+                    e.printStackTrace();
                 }
                 encryptedLine = reader.readLine();
             }
